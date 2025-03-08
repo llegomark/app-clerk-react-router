@@ -9,7 +9,6 @@ import type { Route } from "./+types/home";
 import { CategoryCard } from '~/components/category-card';
 import { getCategories, getCategoryWithQuestions } from '~/lib/supabase';
 import { useQuizStore } from '~/lib/store';
-import type { Category } from '~/types';
 import { Button } from '~/components/ui/button';
 
 export function meta({}: Route.MetaArgs) {
@@ -20,7 +19,6 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export default function Home() {
-  const { user, isSignedIn } = useUser();
   const navigate = useNavigate();
   
   const { categories, setCategories, startQuiz, resetQuiz } = useQuizStore();
@@ -37,7 +35,8 @@ export default function Home() {
       try {
         setIsLoading(true);
         const categoriesData = await getCategories();
-        setCategories(categoriesData);
+        const categoriesWithEmptyQuestions = categoriesData.map(cat => ({ ...cat, questions: [] }));
+        setCategories(categoriesWithEmptyQuestions);
         setError(null);
       } catch (err) {
         console.error('Error fetching categories:', err);

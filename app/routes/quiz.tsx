@@ -47,38 +47,40 @@ export default function Quiz() {
     // If quiz is complete, save results and redirect to results page
     if (isQuizComplete) {
       const saveResults = async () => {
-        // Only try to save results if the user is signed in
-        if (isSignedIn && user) {
-          try {
-            logDebug('Quiz completed, saving results', {
-              categoryId: currentCategory.id,
-              userId: user.id,
-              score: getScore(),
-              totalQuestions: currentCategory.questions.length
-            });
-            
-            // Prepare the quiz result data
-            const resultData = {
-              categoryId: currentCategory.id,
-              answers: userAnswers,
-              score: getScore(),
-              totalQuestions: currentCategory.questions.length,
-              completedAt: new Date()
-            };
-            
-            // Save quiz results to Supabase
-            await saveQuizResult(user.id, resultData);
+        try {
+          logDebug('Quiz completed, preparing to save results', {
+            categoryId: currentCategory.id,
+            score: getScore(),
+            totalQuestions: currentCategory.questions.length
+          });
+          
+          // Prepare the quiz result data
+          const resultData = {
+            categoryId: currentCategory.id,
+            answers: userAnswers,
+            score: getScore(),
+            totalQuestions: currentCategory.questions.length,
+            completedAt: new Date()
+          };
+          
+          // Save quiz results to Supabase
+          const userId = isSignedIn && user ? user.id : 'anonymous';
+          const result = await saveQuizResult(userId, resultData);
+          
+          if (result.success) {
             toast.success('Results saved');
-          } catch (error) {
-            logError('Error saving quiz results', error);
+            logDebug('Results saved successfully');
+          } else {
+            logError('Failed to save results', result.error);
             toast.error('Could not save results, but you can still see your score');
           }
-        } else {
-          logDebug('User not signed in, skipping result save');
+        } catch (error) {
+          logError('Error in saveResults function', error);
+          toast.error('Could not save results, but you can still see your score');
+        } finally {
+          // Navigate to results page regardless of save success
+          navigate('/results');
         }
-        
-        // Navigate to results page regardless of save success
-        navigate('/results');
       };
       
       saveResults();

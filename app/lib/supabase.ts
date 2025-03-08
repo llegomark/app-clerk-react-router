@@ -109,7 +109,7 @@ export async function getCategoryWithQuestions(categoryId: number): Promise<Cate
   }
 }
 
-// Save quiz result - Auth still required for this
+// Save quiz result - Improved version with better error handling
 export async function saveQuizResult(userId: string, result: QuizResult) {
   try {
     logDebug('Saving quiz result', { userId, categoryId: result.categoryId });
@@ -134,11 +134,11 @@ export async function saveQuizResult(userId: string, result: QuizResult) {
       timeRemaining: answer.timeRemaining
     }));
     
-    // Insert the quiz result
+    // Insert the quiz result with explicit logging
     const { data, error } = await supabase
       .from('quiz_results')
       .insert({
-        user_id: userId,
+        user_id: userId || 'anonymous', // Use 'anonymous' if userId is null
         category_id: result.categoryId,
         category_name: categoryData.name,
         score: result.score,
@@ -149,20 +149,20 @@ export async function saveQuizResult(userId: string, result: QuizResult) {
     
     if (error) {
       logError('Error inserting quiz result', error);
-      throw error;
+      console.error('Full error details:', error);
+      return { success: false, error };
     }
     
     logDebug('Quiz result saved successfully');
-    return data;
+    return { success: true, data };
   } catch (error) {
     logError('Error saving quiz result', error);
-    // Even though there was an error, don't rethrow - just report it
-    // so we don't block the user from seeing their results
-    return null;
+    console.error('Exception caught in saveQuizResult:', error);
+    return { success: false, error };
   }
 }
 
-// Get recent quiz results for user - Auth still required for this
+// Get recent quiz results for user
 export async function getRecentQuizResults(userId: string, limit = 5) {
   try {
     logDebug(`Fetching recent quiz results for user ${userId}`);

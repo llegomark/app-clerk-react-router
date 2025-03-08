@@ -183,6 +183,10 @@ export const useQuizStore = create<QuizState>()(
         partialize: (state) => ({
           categories: state.categories,
           lastCategoryId: state.lastCategoryId,
+          // Also persist currentCategory to maintain it between page loads
+          currentCategory: state.currentCategory,
+          isQuizComplete: state.isQuizComplete,
+          userAnswers: state.userAnswers,
         }),
       }
     )
