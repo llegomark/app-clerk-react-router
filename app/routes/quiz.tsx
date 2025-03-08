@@ -1,4 +1,4 @@
-// app/routes/quiz.tsx - renamed from Quiz to Reviewer and added shuffle info
+// app/routes/quiz.tsx
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { useUser } from '@clerk/react-router';
@@ -9,6 +9,7 @@ import { useQuizStore } from '~/lib/store';
 import { QuestionCard } from '~/components/question-card';
 import { QuizHeader } from '~/components/quiz-header';
 import { saveQuizResult, logDebug, logError } from '~/lib/supabase';
+import { SignInPrompt } from '~/components/sign-in-prompt';
 
 export function meta({ }: Route.MetaArgs) {
     return [
@@ -19,7 +20,7 @@ export function meta({ }: Route.MetaArgs) {
 
 export default function Reviewer() {
     const navigate = useNavigate();
-    const { user, isSignedIn } = useUser();
+    const { user, isSignedIn, isLoaded } = useUser();
 
     const {
         currentCategory,
@@ -48,6 +49,12 @@ export default function Reviewer() {
         if (isQuizComplete && currentCategory) {
             const saveResults = async () => {
                 try {
+                    // Only proceed if user is authenticated
+                    if (!isSignedIn || !user) {
+                        navigate('/results', { replace: true });
+                        return;
+                    }
+
                     logDebug('Review completed, preparing to save results', {
                         categoryId: currentCategory.id,
                         score: getScore(),
@@ -64,7 +71,7 @@ export default function Reviewer() {
                     };
 
                     // Save quiz results to Supabase
-                    const userId = isSignedIn && user ? user.id : 'anonymous';
+                    const userId = user.id;
                     const result = await saveQuizResult(userId, resultData);
 
                     if (result.success) {
@@ -86,6 +93,21 @@ export default function Reviewer() {
             saveResults();
         }
     }, [currentCategory, isQuizComplete, navigate, user, isSignedIn, userAnswers, getScore]);
+
+    // Show loading state while checking auth
+    if (!isLoaded) {
+        return (
+            <div className="container mx-auto py-8 px-4 flex flex-col items-center justify-center">
+                <div className="h-5 w-5 rounded-full border-2 border-primary border-t-transparent animate-spin"></div>
+                <p className="mt-3 text-xs text-muted-foreground">Loading...</p>
+            </div>
+        );
+    }
+
+    // Require authentication
+    if (!isSignedIn) {
+        return <SignInPrompt />;
+    }
 
     if (!currentCategory) {
         return null; // Redirect is handled in useEffect

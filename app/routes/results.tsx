@@ -12,6 +12,7 @@ import { PerformanceMetrics } from '~/components/performance-metrics';
 import { QuestionBreakdownChart } from '~/components/question-breakdown-chart';
 import { logDebug, getCategoryWithQuestions, getRecentQuizResults } from '~/lib/supabase';
 import type { RecentQuizResult } from '~/types';
+import { SignInPrompt } from '~/components/sign-in-prompt';
 
 export function meta({ }: Route.MetaArgs) {
     return [
@@ -22,7 +23,7 @@ export function meta({ }: Route.MetaArgs) {
 
 export default function Results() {
     const navigate = useNavigate();
-    const { user, isSignedIn } = useUser();
+    const { user, isSignedIn, isLoaded } = useUser();
 
     const {
         currentCategory,
@@ -63,8 +64,23 @@ export default function Results() {
         fetchPreviousResults();
     }, [currentCategory, isQuizComplete, navigate, user, isSignedIn]);
 
+    // Show loading state while checking auth
+    if (!isLoaded) {
+        return (
+            <div className="container mx-auto py-8 px-4 flex flex-col items-center justify-center">
+                <div className="h-5 w-5 rounded-full border-2 border-primary border-t-transparent animate-spin"></div>
+                <p className="mt-3 text-xs text-muted-foreground">Loading...</p>
+            </div>
+        );
+    }
+
+    // Require authentication
+    if (!isSignedIn) {
+        return <SignInPrompt />;
+    }
+
     if (!currentCategory || !isQuizComplete) {
-        return null;
+        return null; // Redirect is handled in useEffect
     }
 
     // Try Again Function - Properly restarting the quiz
@@ -124,51 +140,42 @@ export default function Results() {
                 onBackToCategories={handleBackToCategories}
             />
 
-            {/* Charts and metrics section - only show for signed in users */}
-            {isSignedIn && (
-                <div className="mt-6 space-y-6">
-                    {/* Progress over time chart - only show if we have previous results */}
-                    {previousResults.length > 0 && (
-                        <UserProgressChart
-                            results={[
-                                // Include the current result with previous ones
-                                {
-                                    id: 0, // Temporary ID
-                                    categoryId: currentCategory.id,
-                                    categoryName: currentCategory.name,
-                                    score: score,
-                                    totalQuestions: totalQuestions,
-                                    completedAt: new Date().toISOString()
-                                },
-                                ...previousResults
-                            ]}
-                            currentCategoryId={currentCategory.id}
-                        />
-                    )}
-
-                    {/* Stats and breakdown in a grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <PerformanceMetrics
-                            allResults={previousResults}
-                            currentResult={{
+            {/* Charts and metrics section */}
+            <div className="mt-6 space-y-6">
+                {/* Progress over time chart - only show if we have previous results */}
+                {previousResults.length > 0 && (
+                    <UserProgressChart
+                        results={[
+                            // Include the current result with previous ones
+                            {
+                                id: 0, // Temporary ID
+                                categoryId: currentCategory.id,
+                                categoryName: currentCategory.name,
                                 score: score,
-                                totalQuestions: totalQuestions
-                            }}
-                        />
-                        <QuestionBreakdownChart
-                            userAnswers={userAnswers}
-                            totalQuestions={totalQuestions}
-                        />
-                    </div>
-                </div>
-            )}
+                                totalQuestions: totalQuestions,
+                                completedAt: new Date().toISOString()
+                            },
+                            ...previousResults
+                        ]}
+                        currentCategoryId={currentCategory.id}
+                    />
+                )}
 
-            {/* Message for anonymous users */}
-            {!isSignedIn && (
-                <div className="mt-6 text-center text-sm text-muted-foreground">
-                    <p>Sign in to track your progress over time and see detailed analytics.</p>
+                {/* Stats and breakdown in a grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <PerformanceMetrics
+                        allResults={previousResults}
+                        currentResult={{
+                            score: score,
+                            totalQuestions: totalQuestions
+                        }}
+                    />
+                    <QuestionBreakdownChart
+                        userAnswers={userAnswers}
+                        totalQuestions={totalQuestions}
+                    />
                 </div>
-            )}
+            </div>
         </div>
     );
 }

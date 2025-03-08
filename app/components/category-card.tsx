@@ -1,4 +1,6 @@
 // app/components/category-card.tsx
+import { useUser } from '@clerk/react-router';
+import { toast } from 'sonner';
 import { Card, CardDescription, CardHeader, CardTitle } from '~/components/ui/card';
 import { cn } from '~/lib/utils';
 import type { Category } from '~/types';
@@ -10,10 +12,18 @@ interface CategoryCardProps {
 }
 
 export function CategoryCard({ category, onSelect, isLoading = false }: CategoryCardProps) {
+    const { isSignedIn } = useUser();
+
     const handleSelect = () => {
-        if (!isLoading) {
-            onSelect(category.id);
+        if (isLoading) return;
+
+        // Check if user is signed in before starting a quiz
+        if (!isSignedIn) {
+            toast.error("Please sign in to access quizzes");
+            return;
         }
+
+        onSelect(category.id);
     };
 
     return (

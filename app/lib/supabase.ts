@@ -111,6 +111,12 @@ export async function getCategoryWithQuestions(categoryId: number): Promise<Cate
 // Save quiz result - Improved version with better error handling
 export async function saveQuizResult(userId: string, result: QuizResult) {
   try {
+    // Don't save results for anonymous users
+    if (!userId || userId === 'anonymous') {
+      logDebug('Not saving quiz result for anonymous user');
+      return { success: false, error: 'User not authenticated' };
+    }
+
     logDebug('Saving quiz result', { userId, categoryId: result.categoryId });
 
     // First, make sure we have the category name
@@ -137,7 +143,7 @@ export async function saveQuizResult(userId: string, result: QuizResult) {
     const { data, error } = await supabase
       .from('quiz_results')
       .insert({
-        user_id: userId || 'anonymous', // Use 'anonymous' if userId is null
+        user_id: userId,
         category_id: result.categoryId,
         category_name: categoryData.name,
         score: result.score,
