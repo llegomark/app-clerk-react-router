@@ -164,11 +164,6 @@ export default function Home() {
           ))
         )}
       </div>
-
-      <div className="text-center mt-8 text-sm text-muted-foreground flex flex-col sm:flex-row items-center justify-center gap-2">
-        <BookIcon className="size-4" />
-        <p>Select any category to start your quiz and test your knowledge</p>
-      </div>
     </div>
   );
 }
