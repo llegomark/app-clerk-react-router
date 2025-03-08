@@ -64,7 +64,7 @@ export function QuestionCard({
         )}
         
         <CardHeader className="px-4 py-3">
-          <h3 className="text-base font-medium">{question.question}</h3>
+          <h3 className="text-base font-medium break-words">{question.question}</h3>
         </CardHeader>
         
         <CardContent className="space-y-3 px-4 py-2">
@@ -79,7 +79,7 @@ export function QuestionCard({
                 key={index}
                 variant="outline"
                 className={cn(
-                  "w-full justify-start text-left py-3 px-3 h-auto font-normal",
+                  "w-full justify-start text-left py-3 px-3 h-auto min-h-12 font-normal break-words whitespace-normal",
                   "cursor-pointer",
                   // Show correct answer in green
                   hasAnswered && isCorrectOption && "border-success bg-success/10",
@@ -106,7 +106,7 @@ export function QuestionCard({
                   <InfoIcon className="size-5 text-primary shrink-0 mt-0.5" />
                   <div>
                     <h3 className="font-medium mb-1 text-sm">Explanation</h3>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-sm text-muted-foreground break-words">
                       {question.explanation}
                     </p>
                   </div>
@@ -117,14 +117,14 @@ export function QuestionCard({
                     <BookOpenIcon className="size-5 text-primary shrink-0 mt-0.5" />
                     <div>
                       <h3 className="font-medium mb-1 text-sm">Reference</h3>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-xs text-muted-foreground break-words">
                         {question.reference.title}
                         {question.reference.url && (
                           <a 
                             href={question.reference.url} 
                             target="_blank" 
                             rel="noopener noreferrer"
-                            className="block text-primary hover:underline mt-1"
+                            className="block text-primary hover:underline mt-1 break-all"
                           >
                             View Reference
                           </a>

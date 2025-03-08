@@ -11,7 +11,7 @@ import { useQuizStore } from '~/lib/store';
 import type { Category } from '~/types';
 import { Button } from '~/components/ui/button';
 
-export function meta({}: Route.MetaArgs) {
+export function meta({ }: Route.MetaArgs) {
   return [
     { title: "NQESH Reviewer Pro - Categories" },
     { name: "description", content: "Select a category to start your NQESH review" },
@@ -21,16 +21,19 @@ export function meta({}: Route.MetaArgs) {
 export default function Home() {
   const { user, isSignedIn } = useUser();
   const navigate = useNavigate();
-  
+
   const { categories, setCategories, startQuiz, resetQuiz } = useQuizStore();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Reset the quiz state when entering the home page
   useEffect(() => {
-    resetQuiz();
+    // Check if we're directly loading the home page (not coming from another page)
+    if (document.referrer === '') {
+      resetQuiz();
+    }
   }, [resetQuiz]);
-  
+
   useEffect(() => {
     async function fetchCategories() {
       try {
@@ -46,21 +49,21 @@ export default function Home() {
         setIsLoading(false);
       }
     }
-    
+
     fetchCategories();
   }, [setCategories]);
-  
+
   const handleSelectCategory = async (categoryId: number) => {
     try {
       setIsLoading(true);
       const categoryWithQuestions = await getCategoryWithQuestions(categoryId);
-      
+
       if (!categoryWithQuestions.questions.length) {
         toast.error('This category has no questions yet');
         setIsLoading(false);
         return;
       }
-      
+
       startQuiz(categoryWithQuestions);
       navigate('/quiz');
     } catch (err) {
@@ -79,13 +82,13 @@ export default function Home() {
           Master essential leadership competencies for your school administrator's journey
         </p>
       </div>
-      
+
       {error && (
         <div className="mb-4 sm:mb-6 p-3 sm:p-4 rounded-md bg-destructive/10 text-destructive-foreground">
           <p className="text-sm">{error}</p>
-          <Button 
-            variant="outline" 
-            size="sm" 
+          <Button
+            variant="outline"
+            size="sm"
             className="mt-2 cursor-pointer"
             onClick={() => window.location.reload()}
           >
@@ -93,7 +96,7 @@ export default function Home() {
           </Button>
         </div>
       )}
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
         {isLoading ? (
           // Skeleton loading placeholders

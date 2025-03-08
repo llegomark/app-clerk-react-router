@@ -42,6 +42,16 @@ export function ResultsCard({
     performanceColor = "text-amber-500";
   }
 
+  // Debug click handler
+  const handleTryAgainClick = (e: React.MouseEvent) => {
+    // Prevent default only if needed for debugging
+    // e.preventDefault(); 
+    console.log('Try Again button clicked');
+    
+    // Call the provided handler
+    onTryAgain();
+  };
+
   return (
     <div className="space-y-4">
       <div>
@@ -126,7 +136,7 @@ export function ResultsCard({
           <Button 
             size="sm"
             className="cursor-pointer gap-1"
-            onClick={onTryAgain}
+            onClick={handleTryAgainClick}
           >
             <RepeatIcon className="size-4" />
             <span>Try Again</span>

@@ -1,7 +1,7 @@
 // app/lib/store.ts
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
-import type { Category, Question, UserAnswer } from '../types';
+import type { Category, Question, UserAnswer } from '~/types';
 import { logDebug } from './supabase';
 
 interface QuizState {
@@ -55,15 +55,32 @@ export const useQuizStore = create<QuizState>()(
         
         // Start a new quiz with the selected category
         startQuiz: (category) => {
-          logDebug('Starting quiz with category', { id: category.id, name: category.name });
+          logDebug('Starting quiz with category', { 
+            id: category.id, 
+            name: category.name,
+            questionsCount: category.questions?.length 
+          });
+          
+          // Make sure to clear everything first
           set({
-            currentCategory: category,
-            lastCategoryId: category.id,
+            currentCategory: null,
             currentQuestionIndex: 0,
             userAnswers: [],
             isQuizComplete: false,
-            isTimerRunning: true,
+            isTimerRunning: false,
           });
+          
+          // Then set the new quiz state in a separate step
+          setTimeout(() => {
+            set({
+              currentCategory: category,
+              lastCategoryId: category.id,
+              currentQuestionIndex: 0,
+              userAnswers: [],
+              isQuizComplete: false,
+              isTimerRunning: true,
+            });
+          }, 10);
         },
         
         // Record the user's answer for the current question

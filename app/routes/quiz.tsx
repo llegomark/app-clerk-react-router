@@ -8,11 +8,11 @@ import type { Route } from "./+types/quiz";
 import { useQuizStore } from '~/lib/store';
 import { QuestionCard } from '~/components/question-card';
 import { QuizHeader } from '~/components/quiz-header';
-import { saveQuizResult, logDebug, logError } from '~/lib/supabase';
+import { saveQuizResult, logDebug, logError, getCategoryWithQuestions } from '~/lib/supabase';
 
 export function meta({}: Route.MetaArgs) {
   return [
-    { title: "NQESH Reviewer - Quiz" },
+    { title: "NQESH Reviewer Pro - Quiz" },
     { name: "description", content: "Test your knowledge with NQESH practice questions" },
   ];
 }
@@ -23,6 +23,7 @@ export default function Quiz() {
   
   const { 
     currentCategory,
+    lastCategoryId,
     currentQuestionIndex,
     userAnswers,
     answerQuestion,
@@ -34,18 +35,38 @@ export default function Quiz() {
     stopTimer,
     isQuizComplete,
     getScore,
-    resetQuiz
+    resetQuiz,
+    startQuiz
   } = useQuizStore();
   
   useEffect(() => {
-    // If no category is selected, redirect to home
-    if (!currentCategory) {
+    // If the quiz state is missing, attempt to use lastCategoryId to recover
+    if (!currentCategory && lastCategoryId) {
+      // Try to recover by fetching the category again
+      const recoverQuiz = async () => {
+        try {
+          logDebug('Attempting to recover quiz with lastCategoryId', { lastCategoryId });
+          const recoveredCategory = await getCategoryWithQuestions(lastCategoryId);
+          startQuiz(recoveredCategory);
+        } catch (error) {
+          logError('Failed to recover quiz', error);
+          // If recovery fails, redirect to home
+          toast.error('Could not load the quiz. Returning to home page.');
+          navigate('/');
+        }
+      };
+      
+      recoverQuiz();
+      return;
+    } else if (!currentCategory) {
+      // No category and no lastCategoryId means we can't recover, go to home
+      logDebug('No quiz data available, redirecting to home');
       navigate('/');
       return;
     }
     
     // If quiz is complete, save results and redirect to results page
-    if (isQuizComplete) {
+    if (isQuizComplete && currentCategory) {  // Added null check here
       const saveResults = async () => {
         try {
           logDebug('Quiz completed, preparing to save results', {
@@ -85,10 +106,14 @@ export default function Quiz() {
       
       saveResults();
     }
-  }, [currentCategory, isQuizComplete, navigate, user, isSignedIn, userAnswers, getScore]);
+  }, [currentCategory, isQuizComplete, navigate, user, isSignedIn, userAnswers, getScore, lastCategoryId, startQuiz]);
   
   if (!currentCategory) {
-    return null;
+    return (
+      <div className="container mx-auto py-8 px-4 text-center">
+        <p>Loading quiz...</p>
+      </div>
+    );
   }
   
   const currentQuestion = getCurrentQuestion();
@@ -96,7 +121,11 @@ export default function Quiz() {
   
   if (!currentQuestion) {
     completeQuiz();
-    return null;
+    return (
+      <div className="container mx-auto py-8 px-4 text-center">
+        <p>Preparing results...</p>
+      </div>
+    );
   }
   
   const handleBackToCategories = () => {
@@ -118,6 +147,8 @@ export default function Quiz() {
   };
   
   const handleNextQuestion = () => {
+    if (!currentCategory) return; // Added null check
+    
     const isLastQuestion = currentQuestionIndex === currentCategory.questions.length - 1;
     
     if (isLastQuestion) {
