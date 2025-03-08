@@ -1,12 +1,18 @@
 // app/components/question-card.tsx
+import { useEffect, useState } from 'react';
 import { Card, CardContent, CardFooter } from '~/components/ui/card';
 import { Button } from '~/components/ui/button';
-import { ArrowRightIcon, BookOpenIcon, InfoIcon, ClockIcon } from 'lucide-react';
+import { ArrowRightIcon, BookOpenIcon, InfoIcon, ClockIcon, BookmarkIcon } from 'lucide-react';
 import { cn } from '~/lib/utils';
 import { Timer } from './timer';
 import { Separator } from '~/components/ui/separator';
 import { toast } from 'sonner';
 import type { Question, UserAnswer } from '~/types';
+import {
+    addBookmark,
+    removeBookmark,
+    isQuestionBookmarked
+} from '~/lib/bookmark-service';
 
 interface QuestionCardProps {
     question: Question;
@@ -14,6 +20,8 @@ interface QuestionCardProps {
     totalQuestions: number;
     userAnswer: UserAnswer | undefined;
     isTimerRunning: boolean;
+    categoryId: number;
+    categoryName: string;
     onAnswer: (selectedOption: number) => void;
     onTimeUp: () => void;
     onNext: () => void;
@@ -25,11 +33,27 @@ export function QuestionCard({
     totalQuestions,
     userAnswer,
     isTimerRunning,
+    categoryId,
+    categoryName,
     onAnswer,
     onTimeUp,
     onNext,
 }: QuestionCardProps) {
     const hasAnswered = userAnswer !== undefined;
+    const [bookmarked, setBookmarked] = useState(false);
+    const [isCheckingBookmark, setIsCheckingBookmark] = useState(true);
+
+    // Check if the question is bookmarked when the component mounts or question changes
+    useEffect(() => {
+        async function checkBookmarkStatus() {
+            setIsCheckingBookmark(true);
+            const { isBookmarked } = await isQuestionBookmarked(question.id);
+            setBookmarked(isBookmarked);
+            setIsCheckingBookmark(false);
+        }
+
+        checkBookmarkStatus();
+    }, [question.id]);
 
     const handleOptionClick = (optionIndex: number) => {
         if (hasAnswered || !isTimerRunning) return;
@@ -39,6 +63,36 @@ export function QuestionCard({
     const handleTimeUp = () => {
         toast.warning("Time's up!");
         onTimeUp();
+    };
+
+    const handleToggleBookmark = async (e: React.MouseEvent) => {
+        // Stop event propagation to prevent it from triggering parent click handlers
+        e.stopPropagation();
+
+        if (isCheckingBookmark) return;
+
+        try {
+            if (bookmarked) {
+                const { success } = await removeBookmark(question.id);
+                if (success) {
+                    setBookmarked(false);
+                    toast.success('Question removed from bookmarks');
+                } else {
+                    throw new Error('Failed to remove bookmark');
+                }
+            } else {
+                const { success } = await addBookmark(question, categoryId, categoryName);
+                if (success) {
+                    setBookmarked(true);
+                    toast.success('Question added to bookmarks');
+                } else {
+                    throw new Error('Failed to bookmark question');
+                }
+            }
+        } catch (error) {
+            console.error('Bookmark error:', error);
+            toast.error('Failed to update bookmark');
+        }
     };
 
     return (
@@ -75,11 +129,28 @@ export function QuestionCard({
                 )}
 
                 <CardContent className="p-5">
-                    {/* Question text - appropriate size, not too large */}
-                    <div className="mb-6">
-                        <h2 className="text-base sm:text-base font-medium leading-relaxed text-foreground">
+                    {/* Question text with bookmark button */}
+                    <div className="mb-6 flex justify-between items-start gap-4">
+                        <h2 className="text-base sm:text-base font-medium leading-relaxed text-foreground flex-1">
                             {question.question}
                         </h2>
+
+                        {/* Bookmark button - fixed for better clickability */}
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className={cn(
+                                "shrink-0 mt-0.5 cursor-pointer z-10",
+                                bookmarked ? "text-amber-500 hover:text-amber-600" : "text-muted-foreground hover:text-foreground",
+                                isCheckingBookmark && "opacity-50 pointer-events-none"
+                            )}
+                            onClick={handleToggleBookmark}
+                            title={bookmarked ? "Remove bookmark" : "Bookmark this question"}
+                            disabled={isCheckingBookmark}
+                        >
+                            <BookmarkIcon className="size-5" />
+                        </Button>
                     </div>
 
                     {/* Options - cleaner design with better hover states */}

@@ -77,6 +77,43 @@ export interface Database {
                         referencedColumns: ["id"]
                     }
                 ]
+            },
+            bookmarked_questions: {
+                Row: {
+                    id: number
+                    user_id: string
+                    question_id: number
+                    category_id: number
+                    category_name: string
+                    question_text: string
+                    bookmarked_at: string
+                }
+                Insert: {
+                    id?: number
+                    user_id?: string
+                    question_id: number
+                    category_id: number
+                    category_name: string
+                    question_text: string
+                    bookmarked_at?: string
+                }
+                Update: {
+                    id?: number
+                    user_id?: string
+                    question_id?: number
+                    category_id?: number
+                    category_name?: string
+                    question_text?: string
+                    bookmarked_at?: string
+                }
+                Relationships: [
+                    {
+                        foreignKeyName: "bookmarked_questions_user_id_fkey"
+                        columns: ["user_id"]
+                        referencedRelation: "users"
+                        referencedColumns: ["id"]
+                    }
+                ]
             }
             // Add other tables here as needed
         }

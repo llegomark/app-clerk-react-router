@@ -9,7 +9,7 @@ import { useQuizStore } from '~/lib/store';
 import { QuestionCard } from '~/components/question-card';
 import { QuizHeader } from '~/components/quiz-header';
 import { saveQuizResult, logDebug, logError } from '~/lib/supabase';
-import { ProtectedRoute } from '~/components/protected-route'; // Import the ProtectedRoute component
+import { ProtectedRoute } from '~/components/protected-route';
 
 export function meta({ }: Route.MetaArgs) {
     return [
@@ -19,7 +19,6 @@ export function meta({ }: Route.MetaArgs) {
 }
 
 export default function Reviewer() {
-    // Wrap the component with ProtectedRoute to ensure authentication
     return (
         <ProtectedRoute>
             <ReviewerContent />
@@ -27,7 +26,6 @@ export default function Reviewer() {
     );
 }
 
-// We separate the actual content into a different component to keep it clean
 function ReviewerContent() {
     const navigate = useNavigate();
     const { user } = useUser();
@@ -158,6 +156,8 @@ function ReviewerContent() {
                 totalQuestions={currentCategory.questions.length}
                 userAnswer={userAnswer}
                 isTimerRunning={isTimerRunning}
+                categoryId={currentCategory.id}
+                categoryName={currentCategory.name}
                 onAnswer={handleAnswerQuestion}
                 onTimeUp={handleTimeUp}
                 onNext={handleNextQuestion}
