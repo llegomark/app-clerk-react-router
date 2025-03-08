@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 import type { Route } from "./+types/results";
 import { useQuizStore } from '~/lib/store';
 import { ResultsCard } from '~/components/results-card';
-import { getCategoryWithQuestions } from '~/lib/supabase';
+import { getCategoryWithQuestions, logDebug, logError } from '~/lib/supabase';
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -40,8 +40,15 @@ export default function Results() {
     return null; // This will prevent rendering before redirection happens
   }
   
-  // Simply restart with the same category - no need to fetch again
+  // Simply restart the same quiz with the current category
   const handleTryAgain = () => {
+    logDebug('Try Again clicked, restarting quiz with same category', { 
+      categoryId: currentCategory.id,
+      categoryName: currentCategory.name 
+    });
+    
+    // No need to fetch the category again, just use the current one
+    // This ensures we're using the exact same category as before
     startQuiz(currentCategory);
     navigate('/quiz');
   };

@@ -4,7 +4,6 @@ import { Card, CardContent, CardFooter, CardHeader } from '~/components/ui/card'
 import { Button } from '~/components/ui/button';
 import { ArrowRightIcon, BookOpenIcon, InfoIcon, TimerIcon } from 'lucide-react';
 import { cn } from '~/lib/utils';
-import { Badge } from '~/components/ui/badge';
 import { Timer } from './timer';
 import { Separator } from '~/components/ui/separator';
 import type { Question, UserAnswer } from '~/types';
@@ -43,15 +42,13 @@ export function QuestionCard({
         <div>
           <span className="font-medium">Question {questionNumber} of {totalQuestions}</span>
         </div>
-        
-        <div className="w-40">
-          <Timer 
-            duration={120} // 2 minutes
-            isRunning={isTimerRunning}
-            onTimeUp={onTimeUp}
-          />
-        </div>
       </div>
+      
+      <Timer 
+        duration={120} // 2 minutes
+        isRunning={isTimerRunning}
+        onTimeUp={onTimeUp}
+      />
       
       <Card className="relative overflow-hidden">
         {!isTimerRunning && !hasAnswered && (
@@ -93,19 +90,7 @@ export function QuestionCard({
                 onClick={() => handleOptionClick(index)}
                 disabled={hasAnswered || !isTimerRunning}
               >
-                <div className="flex items-center gap-3">
-                  <Badge 
-                    variant={hasAnswered && isCorrectOption ? "default" : "outline"}
-                    className={cn(
-                      "size-6 p-0 flex items-center justify-center font-semibold shrink-0",
-                      hasAnswered && isCorrectOption && "bg-success text-success-foreground",
-                      hasAnswered && isSelectedOption && !isCorrectOption && "bg-destructive text-destructive-foreground"
-                    )}
-                  >
-                    {String.fromCharCode(65 + index)}
-                  </Badge>
-                  <span className="text-sm">{option}</span>
-                </div>
+                <span className="text-sm">{option}</span>
               </Button>
             );
           })}

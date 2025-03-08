@@ -70,16 +70,15 @@ export function Timer({ duration, isRunning, onTimeUp, onTimeUpdate }: TimerProp
   const progressValue = (timeRemaining / duration) * 100;
 
   return (
-    <div className="flex flex-col items-end space-y-1">
-      <div className="text-sm font-medium">
-        Time: {formatTime(timeRemaining)}
+    <div className="flex flex-col w-full">
+      <div className="flex justify-between items-center mb-1">
+        <span className="font-medium text-sm">Time: {formatTime(timeRemaining)}</span>
       </div>
       <Progress 
         value={progressValue} 
         className={cn(
           "h-2 w-full",
-          isWarning ? "bg-destructive/20" : "bg-muted",
-          isWarning ? "progress-indicator:bg-destructive" : "progress-indicator:bg-primary"
+          isWarning ? "bg-muted progress-indicator:bg-destructive" : "bg-muted progress-indicator:bg-primary"
         )}
       />
     </div>

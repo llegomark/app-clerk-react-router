@@ -39,3 +39,20 @@ export type Reference = {
     totalQuestions: number;
     completedAt: Date;
   };
+  
+  export type UserScore = {
+    categoryId: number;
+    categoryName: string;
+    highestScore: number;
+    totalAttempts: number;
+    lastAttemptAt: Date;
+  };
+  
+  export type RecentQuizResult = {
+    id: number;
+    categoryId: number;
+    categoryName: string;
+    score: number;
+    totalQuestions: number;
+    completedAt: string;
+  };

@@ -2,6 +2,7 @@
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import type { Category, Question, UserAnswer } from '../types';
+import { logDebug } from './supabase';
 
 interface QuizState {
   // Categories
@@ -10,6 +11,7 @@ interface QuizState {
   
   // Current quiz
   currentCategory: Category | null;
+  lastCategoryId: number | null;
   currentQuestionIndex: number;
   userAnswers: UserAnswer[];
   isQuizComplete: boolean;
@@ -44,6 +46,7 @@ export const useQuizStore = create<QuizState>()(
         setCategories: (categories) => set({ categories }),
         
         currentCategory: null,
+        lastCategoryId: null,
         currentQuestionIndex: 0,
         userAnswers: [],
         isQuizComplete: false,
@@ -52,8 +55,10 @@ export const useQuizStore = create<QuizState>()(
         
         // Start a new quiz with the selected category
         startQuiz: (category) => {
+          logDebug('Starting quiz with category', { id: category.id, name: category.name });
           set({
             currentCategory: category,
+            lastCategoryId: category.id,
             currentQuestionIndex: 0,
             userAnswers: [],
             isQuizComplete: false,
@@ -70,6 +75,13 @@ export const useQuizStore = create<QuizState>()(
           if (!currentQuestion) return;
           
           const isCorrect = selectedOption === currentQuestion.correctAnswer;
+          
+          logDebug('Answering question', { 
+            questionId, 
+            selectedOption, 
+            correctAnswer: currentQuestion.correctAnswer,
+            isCorrect 
+          });
           
           set({
             userAnswers: [
@@ -94,6 +106,12 @@ export const useQuizStore = create<QuizState>()(
           const nextIndex = currentQuestionIndex + 1;
           const isLastQuestion = nextIndex >= currentCategory.questions.length;
           
+          logDebug('Moving to next question', {
+            currentIndex: currentQuestionIndex,
+            nextIndex,
+            isLastQuestion
+          });
+          
           set({
             currentQuestionIndex: isLastQuestion ? currentQuestionIndex : nextIndex,
             isQuizComplete: isLastQuestion,
@@ -103,20 +121,25 @@ export const useQuizStore = create<QuizState>()(
         
         // Complete the quiz
         completeQuiz: () => {
+          logDebug('Completing quiz');
           set({
             isQuizComplete: true,
             isTimerRunning: false,
           });
         },
         
-        // Reset the quiz state
+        // Reset the quiz state but keep lastCategoryId
         resetQuiz: () => {
+          const { lastCategoryId } = get();
+          logDebug('Resetting quiz state', { lastCategoryId });
+          
           set({
             currentCategory: null,
             currentQuestionIndex: 0,
             userAnswers: [],
             isQuizComplete: false,
             isTimerRunning: false,
+            // Keep lastCategoryId for reference
           });
         },
         
@@ -159,6 +182,7 @@ export const useQuizStore = create<QuizState>()(
         name: 'nqesh-quiz-storage',
         partialize: (state) => ({
           categories: state.categories,
+          lastCategoryId: state.lastCategoryId,
         }),
       }
     )

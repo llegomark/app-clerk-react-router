@@ -11,7 +11,7 @@ interface QuizHeaderProps {
 
 export function QuizHeader({ title, onExit }: QuizHeaderProps) {
   return (
-    <div className="mb-4 border-b pb-3">
+    <div className="mb-4">
       <div className="flex items-center justify-between">
         <AlertDialog>
           <AlertDialogTrigger asChild>

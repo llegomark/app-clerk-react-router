@@ -8,7 +8,7 @@ import type { Route } from "./+types/quiz";
 import { useQuizStore } from '~/lib/store';
 import { QuestionCard } from '~/components/question-card';
 import { QuizHeader } from '~/components/quiz-header';
-import { saveQuizResult, logError } from '~/lib/supabase';
+import { saveQuizResult, logDebug, logError } from '~/lib/supabase';
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -49,6 +49,13 @@ export default function Quiz() {
       const saveResults = async () => {
         if (isSignedIn && user) {
           try {
+            logDebug('Quiz completed, saving results', {
+              categoryId: currentCategory.id,
+              userId: user.id,
+              score: getScore(),
+              totalQuestions: currentCategory.questions.length
+            });
+            
             // Prepare the quiz result data
             const resultData = {
               categoryId: currentCategory.id,
@@ -60,11 +67,13 @@ export default function Quiz() {
             
             // Save quiz results to Supabase
             await saveQuizResult(user.id, resultData);
-            toast.success('Quiz completed!');
+            toast.success('Results saved');
           } catch (error) {
-            logError('Error saving quiz results:', error);
+            logError('Error saving quiz results', error);
             toast.error('Could not save results, but you can still see your score');
           }
+        } else {
+          logDebug('User not signed in, skipping result save');
         }
         
         // Navigate to results page regardless of save success
@@ -93,7 +102,9 @@ export default function Quiz() {
   };
   
   const handleAnswerQuestion = (selectedOption: number) => {
-    const timeRemaining = 100;
+    // This would normally come from the timer component
+    // For now, just use a fixed value for the remaining time
+    const timeRemaining = 100; 
     answerQuestion(currentQuestion.id, selectedOption, timeRemaining);
   };
   
