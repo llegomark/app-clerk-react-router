@@ -65,3 +65,29 @@ export type FlashCard = {
   notes?: string;
   examples?: string[];
 };
+
+// New DepEd Order type
+export type DepEdOrder = {
+  id: string;
+  year: number;
+  orderNumber: string;
+  dateIssued: string;
+  title: string;
+  description?: string;
+  fileUrl?: string;
+  tags?: string[];
+};
+
+// Type for sorting
+export type SortDirection = 'asc' | 'desc';
+
+export type SortState = {
+  column: 'year' | 'orderNumber' | 'dateIssued' | 'title';
+  direction: SortDirection;
+};
+
+// Type for pagination
+export type PaginationState = {
+  pageIndex: number;
+  pageSize: number;
+};

@@ -6,4 +6,5 @@ export default [
   { path: "reviewer", file: "routes/quiz.tsx" },
   { path: "results", file: "routes/results.tsx" },
   { path: "flashcards", file: "routes/flashcards.tsx" },
+  { path: "deped-orders", file: "routes/deped-orders.tsx" },
 ] satisfies RouteConfig;

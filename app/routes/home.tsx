@@ -114,16 +114,16 @@ export default function Home() {
       <div className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
         <Card
           className="border-muted bg-card/50 transition-all hover:border-primary/40 hover:bg-accent/10 hover:shadow-md cursor-pointer"
-          onClick={() => navigate('/reviewer')}
+          onClick={() => navigate('/deped-orders')}
         >
           <CardContent className="p-5 flex items-center gap-3">
             <div className="bg-primary/10 p-2 rounded-full">
               <GraduationCapIcon className="size-5 text-primary" />
             </div>
             <div>
-              <h3 className="text-sm font-medium">Practice Questions</h3>
+              <h3 className="text-sm font-medium">DepEd Orders</h3>
               <p className="text-xs text-muted-foreground mt-1">
-                Test your knowledge with NQESH questions
+                Browse and reference official DepEd issuances
               </p>
             </div>
           </CardContent>
