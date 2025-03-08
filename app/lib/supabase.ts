@@ -164,30 +164,40 @@ export async function saveQuizResult(userId: string, result: QuizResult) {
 
 // Get recent quiz results for user
 export async function getRecentQuizResults(userId: string, limit = 5) {
-  try {
-    logDebug(`Fetching recent quiz results for user ${userId}`);
-    
-    const { data, error } = await supabase
-      .from('quiz_results')
-      .select(`
-        id, 
-        category_id,
-        category_name,
-        score, 
-        total_questions, 
-        completed_at
-      `)
-      .eq('user_id', userId)
-      .order('completed_at', { ascending: false })
-      .limit(limit);
-    
-    if (error) throw error;
-    
-    logDebug(`Fetched ${data?.length} recent quiz results`);
-    return data;
-  } catch (error) {
-    logError(`Error fetching recent quiz results for user ${userId}`, error);
-    // Return empty array instead of throwing, to avoid breaking the UI
-    return [];
+    try {
+      logDebug(`Fetching recent quiz results for user ${userId}`);
+      
+      const { data, error } = await supabase
+        .from('quiz_results')
+        .select(`
+          id, 
+          category_id,
+          category_name,
+          score, 
+          total_questions, 
+          completed_at
+        `)
+        .eq('user_id', userId)
+        .order('completed_at', { ascending: false })
+        .limit(limit);
+      
+      if (error) throw error;
+      
+      // Transform the data to match our type structure
+      const formattedResults = data.map(result => ({
+        id: result.id,
+        categoryId: result.category_id,
+        categoryName: result.category_name,
+        score: result.score,
+        totalQuestions: result.total_questions,
+        completedAt: result.completed_at
+      }));
+      
+      logDebug(`Fetched ${formattedResults?.length} recent quiz results`);
+      return formattedResults;
+    } catch (error) {
+      logError(`Error fetching recent quiz results for user ${userId}`, error);
+      // Return empty array instead of throwing, to avoid breaking the UI
+      return [];
+    }
   }
-}
