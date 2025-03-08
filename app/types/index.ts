@@ -56,3 +56,12 @@ export type RecentQuizResult = {
   totalQuestions: number;
   completedAt: string;
 };
+
+export type FlashCard = {
+  id: string;
+  term: string;
+  definition: string;
+  category: string;
+  notes?: string;
+  examples?: string[];
+};

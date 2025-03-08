@@ -1,15 +1,16 @@
-// app/routes/home.tsx - updated navigation and terminology
+// app/routes/home.tsx
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { useUser } from '@clerk/react-router';
 import { toast } from 'sonner';
-import { FolderIcon, GraduationCapIcon } from 'lucide-react';
+import { FolderIcon, GraduationCapIcon, BookOpenIcon } from 'lucide-react';
 
 import type { Route } from "./+types/home";
 import { CategoryCard } from '~/components/category-card';
 import { getCategories, getCategoryWithQuestions } from '~/lib/supabase';
 import { useQuizStore } from '~/lib/store';
 import { Button } from '~/components/ui/button';
+import { Card, CardContent } from '~/components/ui/card';
 
 export function meta({ }: Route.MetaArgs) {
   return [
@@ -84,7 +85,7 @@ export default function Home() {
       // Start the quiz
       startQuiz(categoryWithQuestions);
 
-      // Navigate to reviewer page instead of quiz
+      // Navigate to reviewer page
       navigate('/reviewer');
     } catch (err) {
       console.error('Error fetching category:', err);
@@ -109,6 +110,43 @@ export default function Home() {
         </p>
       </div>
 
+      {/* Study Tools Section */}
+      <div className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
+        <Card
+          className="border-muted bg-card/50 transition-all hover:border-primary/40 hover:bg-accent/10 hover:shadow-md cursor-pointer"
+          onClick={() => navigate('/reviewer')}
+        >
+          <CardContent className="p-5 flex items-center gap-3">
+            <div className="bg-primary/10 p-2 rounded-full">
+              <GraduationCapIcon className="size-5 text-primary" />
+            </div>
+            <div>
+              <h3 className="text-sm font-medium">Practice Questions</h3>
+              <p className="text-xs text-muted-foreground mt-1">
+                Test your knowledge with NQESH questions
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card
+          className="border-muted bg-card/50 transition-all hover:border-primary/40 hover:bg-accent/10 hover:shadow-md cursor-pointer"
+          onClick={() => navigate('/flashcards')}
+        >
+          <CardContent className="p-5 flex items-center gap-3">
+            <div className="bg-primary/10 p-2 rounded-full">
+              <BookOpenIcon className="size-5 text-primary" />
+            </div>
+            <div>
+              <h3 className="text-sm font-medium">Flash Cards</h3>
+              <p className="text-xs text-muted-foreground mt-1">
+                Learn key NQESH terms and definitions
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       {error && (
         <div className="mb-6 sm:mb-8 p-4 sm:p-5 rounded-md bg-destructive/10 text-destructive-foreground max-w-lg mx-auto">
           <p className="text-sm text-center mb-3">{error}</p>
@@ -124,6 +162,8 @@ export default function Home() {
           </div>
         </div>
       )}
+
+      <h2 className="text-lg font-medium mb-4">Topic Categories</h2>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
         {isLoading ? (
