@@ -12,7 +12,7 @@ import { PerformanceMetrics } from '~/components/performance-metrics';
 import { QuestionBreakdownChart } from '~/components/question-breakdown-chart';
 import { logDebug, getCategoryWithQuestions, getRecentQuizResults } from '~/lib/supabase';
 import type { RecentQuizResult } from '~/types';
-import { SignInPrompt } from '~/components/sign-in-prompt';
+import { ProtectedRoute } from '~/components/protected-route'; // Import the ProtectedRoute component
 
 export function meta({ }: Route.MetaArgs) {
     return [
@@ -22,8 +22,18 @@ export function meta({ }: Route.MetaArgs) {
 }
 
 export default function Results() {
+    // Wrap the component with ProtectedRoute to ensure authentication
+    return (
+        <ProtectedRoute>
+            <ResultsContent />
+        </ProtectedRoute>
+    );
+}
+
+// Separate the content into its own component
+function ResultsContent() {
     const navigate = useNavigate();
-    const { user, isSignedIn, isLoaded } = useUser();
+    const { user } = useUser();
 
     const {
         currentCategory,
@@ -46,7 +56,7 @@ export default function Results() {
 
         // Fetch previous quiz results for the user
         const fetchPreviousResults = async () => {
-            if (!isSignedIn || !user) return;
+            if (!user) return;
 
             try {
                 setIsLoadingHistory(true);
@@ -62,25 +72,12 @@ export default function Results() {
         };
 
         fetchPreviousResults();
-    }, [currentCategory, isQuizComplete, navigate, user, isSignedIn]);
+    }, [currentCategory, isQuizComplete, navigate, user]);
 
-    // Show loading state while checking auth
-    if (!isLoaded) {
-        return (
-            <div className="container mx-auto py-8 px-4 flex flex-col items-center justify-center">
-                <div className="h-5 w-5 rounded-full border-2 border-primary border-t-transparent animate-spin"></div>
-                <p className="mt-3 text-xs text-muted-foreground">Loading...</p>
-            </div>
-        );
-    }
-
-    // Require authentication
-    if (!isSignedIn) {
-        return <SignInPrompt />;
-    }
-
+    // If we don't have a category or the quiz isn't complete, return null
+    // The redirect is handled in the useEffect
     if (!currentCategory || !isQuizComplete) {
-        return null; // Redirect is handled in useEffect
+        return null;
     }
 
     // Try Again Function - Properly restarting the quiz
