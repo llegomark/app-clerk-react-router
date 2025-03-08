@@ -97,7 +97,7 @@ export default function Results() {
             startQuiz(freshCategory);
 
             // Navigate to quiz page
-            navigate('/quiz');
+            navigate('/reviewer');
         } catch (error) {
             console.error('Error restarting quiz:', error);
             toast.error('Failed to restart quiz. Please try again.');

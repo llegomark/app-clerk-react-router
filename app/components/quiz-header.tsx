@@ -1,4 +1,3 @@
-// app/components/quiz-header.tsx
 import { ArrowLeftIcon } from 'lucide-react';
 import { Button } from '~/components/ui/button';
 import {
@@ -40,7 +39,7 @@ export function QuizHeader({ title, onExit }: QuizHeaderProps) {
                     </AlertDialogTrigger>
                     <AlertDialogContent>
                         <AlertDialogHeader>
-                            <AlertDialogTitle>Exit Quiz?</AlertDialogTitle>
+                            <AlertDialogTitle>Exit Review?</AlertDialogTitle>
                             <AlertDialogDescription>
                                 Your progress will be lost.
                             </AlertDialogDescription>

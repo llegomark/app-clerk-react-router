@@ -12,12 +12,12 @@ import { saveQuizResult, logDebug, logError } from '~/lib/supabase';
 
 export function meta({ }: Route.MetaArgs) {
     return [
-        { title: "NQESH Reviewer Pro - Quiz" },
+        { title: "NQESH Reviewer Pro" },
         { name: "description", content: "Test your knowledge with NQESH practice questions" },
     ];
 }
 
-export default function Quiz() {
+export default function Reviewer() {
     const navigate = useNavigate();
     const { user, isSignedIn } = useUser();
 
@@ -48,7 +48,7 @@ export default function Quiz() {
         if (isQuizComplete && currentCategory) {
             const saveResults = async () => {
                 try {
-                    logDebug('Quiz completed, preparing to save results', {
+                    logDebug('Review completed, preparing to save results', {
                         categoryId: currentCategory.id,
                         score: getScore(),
                         totalQuestions: currentCategory.questions.length

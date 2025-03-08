@@ -1,4 +1,4 @@
-// app/routes/home.tsx
+// app/routes/home.tsx - updated navigation and terminology
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { useUser } from '@clerk/react-router';
@@ -84,12 +84,12 @@ export default function Home() {
       // Start the quiz
       startQuiz(categoryWithQuestions);
 
-      // Navigate to quiz page
-      navigate('/quiz');
+      // Navigate to reviewer page instead of quiz
+      navigate('/reviewer');
     } catch (err) {
       console.error('Error fetching category:', err);
-      setError('Failed to load quiz questions. Please try again later.');
-      toast.error('Failed to load quiz questions');
+      setError('Failed to load review questions. Please try again later.');
+      toast.error('Failed to load review questions');
     } finally {
       setLoadingCategoryId(null);
     }
@@ -105,7 +105,7 @@ export default function Home() {
         </div>
         <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight mb-2">NQESH Reviewer Pro</h1>
         <p className="text-sm sm:text-base text-muted-foreground max-w-2xl mx-auto">
-          Master essential leadership competencies for your school administrator's journey. Select a category below to start a practice quiz.
+          Master essential leadership competencies for your school administrator's journey. Select a category below to start practicing.
         </p>
       </div>
 
@@ -149,7 +149,7 @@ export default function Home() {
             </div>
             <h3 className="text-lg sm:text-xl font-medium mb-2">No Categories Available</h3>
             <p className="text-sm text-muted-foreground max-w-md">
-              There are no quiz categories available at the moment. Please check back later.
+              There are no review categories available at the moment. Please check back later.
             </p>
           </div>
         ) : (
