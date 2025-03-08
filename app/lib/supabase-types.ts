@@ -15,11 +15,11 @@ export interface Database {
                     id: number
                     user_id: string
                     content: string
-                    created_at?: string // Optional, depending on if you have this column
+                    created_at?: string
                 }
                 Insert: {
-                    id?: number // Optional if it's an auto-incrementing column
-                    user_id?: string // Optional because it has a default value
+                    id?: number
+                    user_id?: string
                     content: string
                     created_at?: string
                 }
@@ -33,7 +33,47 @@ export interface Database {
                     {
                         foreignKeyName: "user_data_user_id_fkey"
                         columns: ["user_id"]
-                        referencedRelation: "users" // This might be different in your schema
+                        referencedRelation: "users"
+                        referencedColumns: ["id"]
+                    }
+                ]
+            },
+            study_notes: {
+                Row: {
+                    id: number
+                    user_id: string
+                    title: string
+                    content: string
+                    category: string | null
+                    is_pinned: boolean
+                    created_at: string
+                    updated_at: string
+                }
+                Insert: {
+                    id?: number
+                    user_id?: string
+                    title: string
+                    content: string
+                    category?: string | null
+                    is_pinned?: boolean
+                    created_at?: string
+                    updated_at?: string
+                }
+                Update: {
+                    id?: number
+                    user_id?: string
+                    title?: string
+                    content?: string
+                    category?: string | null
+                    is_pinned?: boolean
+                    created_at?: string
+                    updated_at?: string
+                }
+                Relationships: [
+                    {
+                        foreignKeyName: "study_notes_user_id_fkey"
+                        columns: ["user_id"]
+                        referencedRelation: "users"
                         referencedColumns: ["id"]
                     }
                 ]
