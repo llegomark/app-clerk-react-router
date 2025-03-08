@@ -43,7 +43,14 @@ export default function Home() {
       try {
         setIsLoading(true);
         const categoriesData = await getCategories();
-        setCategories(categoriesData);
+        
+        // Add empty questions array to make TypeScript happy
+        const categoriesWithEmptyQuestions = categoriesData.map(category => ({
+          ...category,
+          questions: []
+        }));
+        
+        setCategories(categoriesWithEmptyQuestions);
         setError(null);
       } catch (err) {
         console.error('Error fetching categories:', err);
