@@ -77,7 +77,7 @@ export default function App({ loaderData }: Route.ComponentProps) {
               </SignInButton>
             </SignedOut>
             <SignedIn>
-              <UserButton afterSignOutUrl="/" />
+              <UserButton/>
             </SignedIn>
           </div>
         </div>
