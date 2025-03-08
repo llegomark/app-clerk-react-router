@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import type { Route } from "./+types/results";
 import { useQuizStore } from '~/lib/store';
 import { ResultsCard } from '~/components/results-card';
-import { logDebug } from '~/lib/supabase';
+import { logDebug, getCategoryWithQuestions } from '~/lib/supabase';
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -38,26 +38,41 @@ export default function Results() {
     return null;
   }
   
-  // Completely rewritten Try Again function
-  const handleTryAgain = () => {
+  // Try Again Function - Properly restarting the quiz
+  const handleTryAgain = async () => {
     try {
-      logDebug('Try Again button clicked, restarting quiz with same category', { 
-        categoryId: currentCategory.id,
-        categoryName: currentCategory.name,
-        hasQuestions: currentCategory.questions?.length
+      // Need to store these values before reset
+      const categoryId = currentCategory.id;
+      const categoryName = currentCategory.name;
+      
+      logDebug('Try Again button clicked, restarting quiz with category', { 
+        categoryId, 
+        categoryName
       });
       
-      // Get a copy of the current category before resetting
-      const categoryToRestart = {...currentCategory};
+      // First, reset the state
+      resetQuiz();
       
-      // Directly start a new quiz with this category (this will handle the reset internally)
-      startQuiz(categoryToRestart);
+      // Then get fresh data for the category
+      toast.loading('Loading quiz...');
+      const freshCategory = await getCategoryWithQuestions(categoryId);
+      toast.dismiss();
       
-      // Navigate to quiz page (must be after startQuiz)
-      navigate('/quiz', { replace: true });
+      if (!freshCategory || !freshCategory.questions || freshCategory.questions.length === 0) {
+        toast.error('Could not restart the quiz. Please try again.');
+        navigate('/');
+        return;
+      }
+      
+      // Start the quiz with fresh data
+      startQuiz(freshCategory);
+      
+      // Navigate to quiz page
+      navigate('/quiz');
     } catch (error) {
       console.error('Error restarting quiz:', error);
       toast.error('Failed to restart quiz. Please try again.');
+      navigate('/');
     }
   };
   

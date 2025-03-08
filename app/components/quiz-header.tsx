@@ -13,7 +13,6 @@ import {
   AlertDialogTitle, 
   AlertDialogTrigger 
 } from '~/components/ui/alert-dialog';
-import { cn } from '~/lib/utils';
 
 interface QuizHeaderProps {
   title: string;
@@ -21,6 +20,12 @@ interface QuizHeaderProps {
 }
 
 export function QuizHeader({ title, onExit }: QuizHeaderProps) {
+  // Function to handle the exit confirmation
+  const handleConfirmExit = () => {
+    // Call the provided onExit function
+    onExit();
+  };
+
   return (
     <div className="mb-4">
       <div className="flex items-center justify-between">
@@ -43,10 +48,9 @@ export function QuizHeader({ title, onExit }: QuizHeaderProps) {
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel className="cursor-pointer">Cancel</AlertDialogCancel>
-              {/* Use Button directly instead of AlertDialogAction for more control */}
               <Button 
                 variant="destructive" 
-                onClick={onExit}
+                onClick={handleConfirmExit}
                 className="cursor-pointer"
               >
                 Exit

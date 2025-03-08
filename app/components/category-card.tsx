@@ -1,20 +1,17 @@
 // app/components/category-card.tsx
 import React from 'react';
-import { useNavigate } from 'react-router';
 import { ArrowRightIcon } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '~/components/ui/card';
 import { Button } from '~/components/ui/button';
 import type { Category } from '~/types';
-import { useQuizStore } from '~/lib/store';
 
 interface CategoryCardProps {
   category: Omit<Category, 'questions'>;
   onSelect: (id: number) => void;
+  isLoading?: boolean;
 }
 
-export function CategoryCard({ category, onSelect }: CategoryCardProps) {
-  const navigate = useNavigate();
-  
+export function CategoryCard({ category, onSelect, isLoading = false }: CategoryCardProps) {
   const handleSelect = () => {
     onSelect(category.id);
   };
@@ -42,9 +39,10 @@ export function CategoryCard({ category, onSelect }: CategoryCardProps) {
           variant="default" 
           className="w-full gap-1 cursor-pointer"
           onClick={handleSelect}
+          disabled={isLoading}
         >
-          Start Quiz
-          <ArrowRightIcon className="size-4" />
+          {isLoading ? 'Loading...' : 'Start Quiz'}
+          {!isLoading && <ArrowRightIcon className="size-4" />}
         </Button>
       </CardFooter>
     </Card>

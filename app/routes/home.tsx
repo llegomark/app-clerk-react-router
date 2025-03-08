@@ -1,4 +1,4 @@
-// app/routes/home.tsx (updating the title and removing instructions)
+// app/routes/home.tsx
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { useUser } from '@clerk/react-router';
@@ -11,7 +11,7 @@ import { useQuizStore } from '~/lib/store';
 import type { Category } from '~/types';
 import { Button } from '~/components/ui/button';
 
-export function meta({ }: Route.MetaArgs) {
+export function meta({}: Route.MetaArgs) {
   return [
     { title: "NQESH Reviewer Pro - Categories" },
     { name: "description", content: "Select a category to start your NQESH review" },
@@ -21,25 +21,29 @@ export function meta({ }: Route.MetaArgs) {
 export default function Home() {
   const { user, isSignedIn } = useUser();
   const navigate = useNavigate();
-
-  const { categories, setCategories, startQuiz, resetQuiz } = useQuizStore();
+  
+  const { 
+    categories, 
+    setCategories, 
+    startQuiz, 
+    resetQuiz 
+  } = useQuizStore();
+  
   const [isLoading, setIsLoading] = useState(true);
+  const [categoryLoading, setCategoryLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  // Reset the quiz state when entering the home page
+  
+  // Reset state on mount
   useEffect(() => {
-    // Check if we're directly loading the home page (not coming from another page)
-    if (document.referrer === '') {
-      resetQuiz();
-    }
+    resetQuiz();
   }, [resetQuiz]);
-
+  
   useEffect(() => {
     async function fetchCategories() {
       try {
         setIsLoading(true);
         const categoriesData = await getCategories();
-        setCategories(categoriesData.map(category => ({ ...category, questions: [] })));
+        setCategories(categoriesData);
         setError(null);
       } catch (err) {
         console.error('Error fetching categories:', err);
@@ -49,28 +53,39 @@ export default function Home() {
         setIsLoading(false);
       }
     }
-
+    
     fetchCategories();
   }, [setCategories]);
-
+  
   const handleSelectCategory = async (categoryId: number) => {
+    if (categoryLoading) return; // Prevent multiple selections
+    
     try {
-      setIsLoading(true);
+      setCategoryLoading(true);
+      
+      // Reset first
+      resetQuiz();
+      
+      // Fetch category with questions
       const categoryWithQuestions = await getCategoryWithQuestions(categoryId);
-
+      
       if (!categoryWithQuestions.questions.length) {
         toast.error('This category has no questions yet');
-        setIsLoading(false);
+        setCategoryLoading(false);
         return;
       }
-
+      
+      // Start the quiz
       startQuiz(categoryWithQuestions);
+      
+      // Navigate to quiz page
       navigate('/quiz');
     } catch (err) {
       console.error('Error fetching category:', err);
       setError('Failed to load quiz questions. Please try again later.');
       toast.error('Failed to load quiz questions');
-      setIsLoading(false);
+    } finally {
+      setCategoryLoading(false);
     }
   };
 
@@ -82,13 +97,13 @@ export default function Home() {
           Master essential leadership competencies for your school administrator's journey
         </p>
       </div>
-
+      
       {error && (
         <div className="mb-4 sm:mb-6 p-3 sm:p-4 rounded-md bg-destructive/10 text-destructive-foreground">
           <p className="text-sm">{error}</p>
-          <Button
-            variant="outline"
-            size="sm"
+          <Button 
+            variant="outline" 
+            size="sm" 
             className="mt-2 cursor-pointer"
             onClick={() => window.location.reload()}
           >
@@ -96,7 +111,7 @@ export default function Home() {
           </Button>
         </div>
       )}
-
+      
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
         {isLoading ? (
           // Skeleton loading placeholders
@@ -124,6 +139,7 @@ export default function Home() {
               key={category.id}
               category={category}
               onSelect={handleSelectCategory}
+              isLoading={categoryLoading}
             />
           ))
         )}

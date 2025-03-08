@@ -8,7 +8,7 @@ import type { Route } from "./+types/quiz";
 import { useQuizStore } from '~/lib/store';
 import { QuestionCard } from '~/components/question-card';
 import { QuizHeader } from '~/components/quiz-header';
-import { saveQuizResult, logDebug, logError, getCategoryWithQuestions } from '~/lib/supabase';
+import { saveQuizResult, logDebug, logError } from '~/lib/supabase';
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -23,7 +23,6 @@ export default function Quiz() {
   
   const { 
     currentCategory,
-    lastCategoryId,
     currentQuestionIndex,
     userAnswers,
     answerQuestion,
@@ -35,38 +34,18 @@ export default function Quiz() {
     stopTimer,
     isQuizComplete,
     getScore,
-    resetQuiz,
-    startQuiz
+    resetQuiz
   } = useQuizStore();
   
   useEffect(() => {
-    // If the quiz state is missing, attempt to use lastCategoryId to recover
-    if (!currentCategory && lastCategoryId) {
-      // Try to recover by fetching the category again
-      const recoverQuiz = async () => {
-        try {
-          logDebug('Attempting to recover quiz with lastCategoryId', { lastCategoryId });
-          const recoveredCategory = await getCategoryWithQuestions(lastCategoryId);
-          startQuiz(recoveredCategory);
-        } catch (error) {
-          logError('Failed to recover quiz', error);
-          // If recovery fails, redirect to home
-          toast.error('Could not load the quiz. Returning to home page.');
-          navigate('/');
-        }
-      };
-      
-      recoverQuiz();
-      return;
-    } else if (!currentCategory) {
-      // No category and no lastCategoryId means we can't recover, go to home
-      logDebug('No quiz data available, redirecting to home');
-      navigate('/');
+    // If no category is selected, redirect to home
+    if (!currentCategory) {
+      navigate('/', { replace: true });
       return;
     }
     
     // If quiz is complete, save results and redirect to results page
-    if (isQuizComplete && currentCategory) {  // Added null check here
+    if (isQuizComplete && currentCategory) {
       const saveResults = async () => {
         try {
           logDebug('Quiz completed, preparing to save results', {
@@ -100,20 +79,16 @@ export default function Quiz() {
           toast.error('Could not save results, but you can still see your score');
         } finally {
           // Navigate to results page regardless of save success
-          navigate('/results');
+          navigate('/results', { replace: true });
         }
       };
       
       saveResults();
     }
-  }, [currentCategory, isQuizComplete, navigate, user, isSignedIn, userAnswers, getScore, lastCategoryId, startQuiz]);
+  }, [currentCategory, isQuizComplete, navigate, user, isSignedIn, userAnswers, getScore]);
   
   if (!currentCategory) {
-    return (
-      <div className="container mx-auto py-8 px-4 text-center">
-        <p>Loading quiz...</p>
-      </div>
-    );
+    return null; // Redirect is handled in useEffect
   }
   
   const currentQuestion = getCurrentQuestion();
@@ -128,14 +103,14 @@ export default function Quiz() {
     );
   }
   
+  // Exit handler - this needs to properly reset state and navigate
   const handleBackToCategories = () => {
+    console.log("Exit button clicked, resetting state and navigating to home");
     resetQuiz();
-    navigate('/');
+    navigate('/', { replace: true });
   };
   
   const handleAnswerQuestion = (selectedOption: number) => {
-    // This would normally come from the timer component
-    // For now, just use a fixed value for the remaining time
     const timeRemaining = 100; 
     answerQuestion(currentQuestion.id, selectedOption, timeRemaining);
   };
@@ -147,7 +122,7 @@ export default function Quiz() {
   };
   
   const handleNextQuestion = () => {
-    if (!currentCategory) return; // Added null check
+    if (!currentCategory) return;
     
     const isLastQuestion = currentQuestionIndex === currentCategory.questions.length - 1;
     
