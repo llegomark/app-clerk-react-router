@@ -3,6 +3,7 @@ import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import type { Category, Question, UserAnswer } from '~/types';
 import { logDebug } from './supabase';
+import { shuffleArray } from './utils';
 
 interface QuizState {
   // Categories
@@ -36,6 +37,12 @@ interface QuizState {
   getResultPercentage: () => number;
 }
 
+interface ShuffledQuestion extends Question {
+  // Map to track the new positions of options after shuffling
+  // Key: new index, Value: original index
+  optionIndexMap: Map<number, number>;
+}
+
 export const useQuizStore = create<QuizState>()(
   devtools(
     (set, get) => ({
@@ -50,17 +57,51 @@ export const useQuizStore = create<QuizState>()(
 
       isTimerRunning: false,
 
-      // Start a new quiz with the selected category
+      // Start a new quiz with the selected category and shuffle questions/options
       startQuiz: (category) => {
-        logDebug('Starting quiz with category', {
+        logDebug('Starting review with category', {
           id: category.id,
           name: category.name,
           questionsCount: category.questions?.length
         });
 
+        // Step 1: Create shuffled questions with shuffled options
+        const questionsWithShuffledOptions = category.questions.map(question => {
+          // Make a copy of the original options
+          const originalOptions = [...question.options];
+
+          // Shuffle the options
+          const shuffledOptions = shuffleArray(originalOptions);
+
+          // Create a mapping between new positions and original positions
+          const optionIndexMap = new Map<number, number>();
+
+          // Fill the mapping
+          shuffledOptions.forEach((option, newIndex) => {
+            const originalIndex = originalOptions.indexOf(option);
+            optionIndexMap.set(newIndex, originalIndex);
+          });
+
+          // Return question with shuffled options and index mapping
+          return {
+            ...question,
+            options: shuffledOptions,
+            optionIndexMap
+          } as ShuffledQuestion;
+        });
+
+        // Step 2: Shuffle the questions themselves
+        const shuffledQuestions = shuffleArray(questionsWithShuffledOptions);
+
+        // Step 3: Create a new category with shuffled questions
+        const shuffledCategory = {
+          ...category,
+          questions: shuffledQuestions
+        };
+
         // Reset state first, then set new state
         set({
-          currentCategory: category,
+          currentCategory: shuffledCategory,
           currentQuestionIndex: 0,
           userAnswers: [],
           isQuizComplete: false,
@@ -73,15 +114,25 @@ export const useQuizStore = create<QuizState>()(
         const { currentCategory, userAnswers } = get();
         if (!currentCategory) return;
 
-        const currentQuestion = currentCategory.questions.find(q => q.id === questionId);
+        const currentQuestion = currentCategory.questions.find(q => q.id === questionId) as ShuffledQuestion;
         if (!currentQuestion) return;
 
-        const isCorrect = selectedOption === currentQuestion.correctAnswer;
+        // Use the mapping to determine if the answer is correct
+        // We need to convert the shuffled index back to the original index
+        let isCorrect = false;
+
+        if (selectedOption !== null) {
+          // Get the original index that corresponds to the selected option
+          const originalSelectedIndex = currentQuestion.optionIndexMap.get(selectedOption);
+          // Check if that original index was the correct answer
+          isCorrect = originalSelectedIndex === currentQuestion.correctAnswer;
+        }
 
         logDebug('Answering question', {
           questionId,
           selectedOption,
-          correctAnswer: currentQuestion.correctAnswer,
+          // Additional debug info
+          originalCorrectAnswer: currentQuestion.correctAnswer,
           isCorrect
         });
 
@@ -123,7 +174,7 @@ export const useQuizStore = create<QuizState>()(
 
       // Complete the quiz
       completeQuiz: () => {
-        logDebug('Completing quiz');
+        logDebug('Completing review');
         set({
           isQuizComplete: true,
           isTimerRunning: false,
@@ -132,7 +183,7 @@ export const useQuizStore = create<QuizState>()(
 
       // Reset the quiz state
       resetQuiz: () => {
-        logDebug('Resetting quiz state');
+        logDebug('Resetting review state');
         set({
           currentCategory: null,
           currentQuestionIndex: 0,

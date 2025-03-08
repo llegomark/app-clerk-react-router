@@ -1,4 +1,4 @@
-// app/routes/quiz.tsx
+// app/routes/quiz.tsx - renamed from Quiz to Reviewer and added shuffle info
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { useUser } from '@clerk/react-router';
@@ -111,8 +111,8 @@ export default function Reviewer() {
     };
 
     const handleAnswerQuestion = (selectedOption: number) => {
-        // Get actual time remaining from the timer component
-        // For now, we'll use a placeholder value
+        // Note: We're now using the mapped option indexes for correct answer checking
+        // The mapping from shuffled to original indexes is handled in the store
         const timeRemaining = 100;
         answerQuestion(currentQuestion.id, selectedOption, timeRemaining);
     };
