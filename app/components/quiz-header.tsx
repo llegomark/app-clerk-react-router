@@ -2,7 +2,18 @@
 import React from 'react';
 import { ArrowLeftIcon } from 'lucide-react';
 import { Button } from '~/components/ui/button';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '~/components/ui/alert-dialog';
+import { 
+  AlertDialog, 
+  AlertDialogAction, 
+  AlertDialogCancel, 
+  AlertDialogContent, 
+  AlertDialogDescription, 
+  AlertDialogFooter, 
+  AlertDialogHeader, 
+  AlertDialogTitle, 
+  AlertDialogTrigger 
+} from '~/components/ui/alert-dialog';
+import { cn } from '~/lib/utils';
 
 interface QuizHeaderProps {
   title: string;
@@ -32,12 +43,14 @@ export function QuizHeader({ title, onExit }: QuizHeaderProps) {
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel className="cursor-pointer">Cancel</AlertDialogCancel>
-              <AlertDialogAction 
+              {/* Use Button directly instead of AlertDialogAction for more control */}
+              <Button 
+                variant="destructive" 
                 onClick={onExit}
-                className="bg-destructive text-destructive-foreground cursor-pointer"
+                className="cursor-pointer"
               >
                 Exit
-              </AlertDialogAction>
+              </Button>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>

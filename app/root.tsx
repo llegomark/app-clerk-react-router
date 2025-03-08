@@ -14,6 +14,7 @@ import { Toaster } from "sonner";
 import { BookOpenIcon } from "lucide-react";
 
 import type { Route } from "./+types/root";
+import { Footer } from '~/components/footer';
 import stylesheet from "./app.css?url";
 
 export async function loader(args: Route.LoaderArgs) {
@@ -60,12 +61,12 @@ export default function App({ loaderData }: Route.ComponentProps) {
     <ClerkProvider loaderData={loaderData}>
       <header className="bg-background border-b py-3">
         <div className="container mx-auto flex items-center justify-between px-4 max-w-4xl">
-          <div 
+          <div
             className="flex items-center gap-2 cursor-pointer"
             onClick={() => navigate('/')}
           >
             <BookOpenIcon className="size-5 text-primary" />
-            <span className="font-bold text-lg">NQESH Reviewer</span>
+            <span className="font-bold text-lg">NQESH Reviewer Pro</span>
           </div>
           <div>
             <SignedOut>
@@ -81,12 +82,10 @@ export default function App({ loaderData }: Route.ComponentProps) {
           </div>
         </div>
       </header>
-      <main className="min-h-[calc(100vh-7rem)] bg-background">
+      <main className="min-h-[calc(100vh-10rem)] bg-background">
         <Outlet />
       </main>
-      <footer className="border-t py-3 text-center text-xs text-muted-foreground">
-        <p>© 2025 NQESH Reviewer</p>
-      </footer>
+      <Footer />
     </ClerkProvider>
   );
 }
@@ -117,7 +116,7 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
         </pre>
       )}
       <div className="mt-6">
-        <button 
+        <button
           onClick={() => window.location.href = '/'}
           className="bg-primary text-primary-foreground rounded-md px-4 py-2 text-sm cursor-pointer"
         >

@@ -112,11 +112,19 @@ export const useQuizStore = create<QuizState>()(
             isLastQuestion
           });
           
+          // First stop the timer to ensure clean state
           set({
-            currentQuestionIndex: isLastQuestion ? currentQuestionIndex : nextIndex,
-            isQuizComplete: isLastQuestion,
-            isTimerRunning: !isLastQuestion,
+            isTimerRunning: false,
           });
+          
+          // Then in the next tick start the new question with a fresh timer
+          setTimeout(() => {
+            set({
+              currentQuestionIndex: isLastQuestion ? currentQuestionIndex : nextIndex,
+              isQuizComplete: isLastQuestion,
+              isTimerRunning: !isLastQuestion,
+            });
+          }, 10);
         },
         
         // Complete the quiz

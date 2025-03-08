@@ -8,17 +8,18 @@ interface TimerProps {
   isRunning: boolean;
   onTimeUp: () => void;
   onTimeUpdate?: (timeRemaining: number) => void;
+  key?: string | number; // Add key prop to force re-creation
 }
 
 export function Timer({ duration, isRunning, onTimeUp, onTimeUpdate }: TimerProps) {
   const [timeRemaining, setTimeRemaining] = useState(duration);
   const [isWarning, setIsWarning] = useState(false);
 
-  // Reset timer when duration changes
+  // Reset timer when duration changes or when isRunning becomes true
   useEffect(() => {
     setTimeRemaining(duration);
     setIsWarning(false);
-  }, [duration]);
+  }, [duration, isRunning]);
 
   useEffect(() => {
     let interval: number | undefined;

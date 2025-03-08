@@ -1,7 +1,6 @@
-// app/routes/home.tsx
+// app/routes/home.tsx (updating the title and removing instructions)
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { BookOpenIcon, CircleIcon } from 'lucide-react';
 import { useUser } from '@clerk/react-router';
 import { toast } from 'sonner';
 
@@ -9,16 +8,18 @@ import type { Route } from "./+types/home";
 import { CategoryCard } from '~/components/category-card';
 import { getCategories, getCategoryWithQuestions } from '~/lib/supabase';
 import { useQuizStore } from '~/lib/store';
+import type { Category } from '~/types';
 import { Button } from '~/components/ui/button';
 
 export function meta({}: Route.MetaArgs) {
   return [
-    { title: "NQESH Reviewer - Categories" },
+    { title: "NQESH Reviewer Pro - Categories" },
     { name: "description", content: "Select a category to start your NQESH review" },
   ];
 }
 
 export default function Home() {
+  const { user, isSignedIn } = useUser();
   const navigate = useNavigate();
   
   const { categories, setCategories, startQuiz, resetQuiz } = useQuizStore();
@@ -35,8 +36,7 @@ export default function Home() {
       try {
         setIsLoading(true);
         const categoriesData = await getCategories();
-        const categoriesWithEmptyQuestions = categoriesData.map(cat => ({ ...cat, questions: [] }));
-        setCategories(categoriesWithEmptyQuestions);
+        setCategories(categoriesData.map(category => ({ ...category, questions: [] })));
         setError(null);
       } catch (err) {
         console.error('Error fetching categories:', err);
@@ -74,9 +74,9 @@ export default function Home() {
   return (
     <div className="container mx-auto py-4 sm:py-6 px-4 max-w-4xl">
       <div className="mb-4 sm:mb-6">
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">NQESH Reviewer</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">NQESH Reviewer Pro</h1>
         <p className="text-sm text-muted-foreground">
-          Select a category to start practicing for your National Qualifying Examination for School Heads
+          Master essential leadership competencies for your school administrator's journey
         </p>
       </div>
       
@@ -93,11 +93,6 @@ export default function Home() {
           </Button>
         </div>
       )}
-      
-      <div className="mb-4 sm:mb-6 flex items-center gap-1 text-xs sm:text-sm text-muted-foreground">
-        <CircleIcon className="size-2" />
-        <span>Select a category below to begin the quiz</span>
-      </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
         {isLoading ? (
@@ -129,13 +124,6 @@ export default function Home() {
             />
           ))
         )}
-      </div>
-      
-      <div className="flex justify-center mt-6 sm:mt-8">
-        <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
-          <BookOpenIcon className="size-3 sm:size-4" />
-          <span>Developed by Mark Anthony Llego</span>
-        </div>
       </div>
     </div>
   );

@@ -45,6 +45,7 @@ export function QuestionCard({
       </div>
       
       <Timer 
+        key={`timer-${question.id}-${isTimerRunning}`}
         duration={120} // 2 minutes
         isRunning={isTimerRunning}
         onTimeUp={onTimeUp}
