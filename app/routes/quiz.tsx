@@ -47,6 +47,7 @@ export default function Quiz() {
     // If quiz is complete, save results and redirect to results page
     if (isQuizComplete) {
       const saveResults = async () => {
+        // Only try to save results if the user is signed in
         if (isSignedIn && user) {
           try {
             logDebug('Quiz completed, saving results', {

@@ -2,12 +2,11 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { useUser } from '@clerk/react-router';
-import { toast } from 'sonner';
 
 import type { Route } from "./+types/results";
 import { useQuizStore } from '~/lib/store';
 import { ResultsCard } from '~/components/results-card';
-import { getCategoryWithQuestions, logDebug, logError } from '~/lib/supabase';
+import { logDebug } from '~/lib/supabase';
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -18,7 +17,6 @@ export function meta({}: Route.MetaArgs) {
 
 export default function Results() {
   const navigate = useNavigate();
-  const { user, isSignedIn } = useUser();
   
   const { 
     currentCategory, 
@@ -48,7 +46,6 @@ export default function Results() {
     });
     
     // No need to fetch the category again, just use the current one
-    // This ensures we're using the exact same category as before
     startQuiz(currentCategory);
     navigate('/quiz');
   };

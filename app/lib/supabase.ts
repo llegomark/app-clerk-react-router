@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
+// Create a basic client with the anon key - this is now used for everything
 export const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Debug log
@@ -31,7 +32,7 @@ export function logError(message: string, error: any) {
   }
 }
 
-// Categories API
+// Categories API - No auth required
 export async function getCategories() {
   try {
     logDebug('Fetching categories');
@@ -48,10 +49,11 @@ export async function getCategories() {
   }
 }
 
-// Questions API
+// Questions API - No auth required now
 export async function getQuestionsByCategory(categoryId: number) {
   try {
     logDebug(`Fetching questions for category ${categoryId}`);
+    
     const { data, error } = await supabase
       .from('questions')
       .select('*')
@@ -77,7 +79,7 @@ export async function getQuestionsByCategory(categoryId: number) {
   }
 }
 
-// Category with questions
+// Category with questions - No auth required now
 export async function getCategoryWithQuestions(categoryId: number): Promise<Category> {
   try {
     logDebug(`Fetching category ${categoryId} with questions`);
@@ -107,7 +109,7 @@ export async function getCategoryWithQuestions(categoryId: number): Promise<Cate
   }
 }
 
-// Save quiz result
+// Save quiz result - Auth still required for this
 export async function saveQuizResult(userId: string, result: QuizResult) {
   try {
     logDebug('Saving quiz result', { userId, categoryId: result.categoryId });
@@ -160,10 +162,11 @@ export async function saveQuizResult(userId: string, result: QuizResult) {
   }
 }
 
-// Get recent quiz results for user
+// Get recent quiz results for user - Auth still required for this
 export async function getRecentQuizResults(userId: string, limit = 5) {
   try {
     logDebug(`Fetching recent quiz results for user ${userId}`);
+    
     const { data, error } = await supabase
       .from('quiz_results')
       .select(`
