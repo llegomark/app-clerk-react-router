@@ -68,7 +68,7 @@ export default function Quiz() {
           const result = await saveQuizResult(userId, resultData);
           
           if (result.success) {
-            toast.success('Results saved');
+            // Remove success toast, only log the success
             logDebug('Results saved successfully');
           } else {
             logError('Failed to save results', result.error);
@@ -118,7 +118,7 @@ export default function Quiz() {
   const handleTimeUp = () => {
     answerQuestion(currentQuestion.id, null, 0);
     stopTimer();
-    toast.warning('Time\'s up!');
+    // Removed toast notification to prevent duplication
   };
   
   const handleNextQuestion = () => {

@@ -6,6 +6,7 @@ import { ArrowRightIcon, BookOpenIcon, InfoIcon, TimerIcon } from 'lucide-react'
 import { cn } from '~/lib/utils';
 import { Timer } from './timer';
 import { Separator } from '~/components/ui/separator';
+import { toast } from 'sonner';
 import type { Question, UserAnswer } from '~/types';
 
 interface QuestionCardProps {
@@ -36,6 +37,12 @@ export function QuestionCard({
     onAnswer(optionIndex);
   };
   
+  const handleTimeUp = () => {
+    // Show time's up toast here and call the parent handler
+    toast.warning("Time's up!");
+    onTimeUp();
+  };
+  
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between mb-1">
@@ -48,7 +55,7 @@ export function QuestionCard({
         key={`timer-${question.id}-${isTimerRunning}`}
         duration={120} // 2 minutes
         isRunning={isTimerRunning}
-        onTimeUp={onTimeUp}
+        onTimeUp={handleTimeUp} // Use local handler that shows toast
       />
       
       <Card className="relative overflow-hidden">
