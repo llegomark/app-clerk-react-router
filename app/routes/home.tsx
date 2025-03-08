@@ -3,16 +3,15 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { useUser } from '@clerk/react-router';
 import { toast } from 'sonner';
-import { BookIcon, FolderIcon, GraduationCapIcon } from 'lucide-react';
+import { FolderIcon, GraduationCapIcon } from 'lucide-react';
 
 import type { Route } from "./+types/home";
 import { CategoryCard } from '~/components/category-card';
 import { getCategories, getCategoryWithQuestions } from '~/lib/supabase';
 import { useQuizStore } from '~/lib/store';
-import type { Category } from '~/types';
 import { Button } from '~/components/ui/button';
 
-export function meta({}: Route.MetaArgs) {
+export function meta({ }: Route.MetaArgs) {
   return [
     { title: "NQESH Reviewer Pro - Categories" },
     { name: "description", content: "Select a category to start your NQESH review" },
@@ -22,35 +21,35 @@ export function meta({}: Route.MetaArgs) {
 export default function Home() {
   const { user, isSignedIn } = useUser();
   const navigate = useNavigate();
-  
-  const { 
-    categories, 
-    setCategories, 
-    startQuiz, 
-    resetQuiz 
+
+  const {
+    categories,
+    setCategories,
+    startQuiz,
+    resetQuiz
   } = useQuizStore();
-  
+
   const [isLoading, setIsLoading] = useState(true);
   const [loadingCategoryId, setLoadingCategoryId] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Reset state on mount
   useEffect(() => {
     resetQuiz();
   }, [resetQuiz]);
-  
+
   useEffect(() => {
     async function fetchCategories() {
       try {
         setIsLoading(true);
         const categoriesData = await getCategories();
-        
+
         // Add empty questions array to make TypeScript happy
         const categoriesWithEmptyQuestions = categoriesData.map(category => ({
           ...category,
           questions: []
         }));
-        
+
         setCategories(categoriesWithEmptyQuestions);
         setError(null);
       } catch (err) {
@@ -61,30 +60,30 @@ export default function Home() {
         setIsLoading(false);
       }
     }
-    
+
     fetchCategories();
   }, [setCategories]);
-  
+
   const handleSelectCategory = async (categoryId: number) => {
     if (loadingCategoryId !== null) return; // Prevent multiple selections
-    
+
     try {
       setLoadingCategoryId(categoryId);
-      
+
       // Reset first
       resetQuiz();
-      
+
       // Fetch category with questions
       const categoryWithQuestions = await getCategoryWithQuestions(categoryId);
-      
+
       if (!categoryWithQuestions.questions.length) {
         toast.error('This category has no questions yet');
         return;
       }
-      
+
       // Start the quiz
       startQuiz(categoryWithQuestions);
-      
+
       // Navigate to quiz page
       navigate('/quiz');
     } catch (err) {
@@ -109,14 +108,14 @@ export default function Home() {
           Master essential leadership competencies for your school administrator's journey. Select a category below to start a practice quiz.
         </p>
       </div>
-      
+
       {error && (
         <div className="mb-6 sm:mb-8 p-4 sm:p-5 rounded-md bg-destructive/10 text-destructive-foreground max-w-lg mx-auto">
           <p className="text-sm text-center mb-3">{error}</p>
           <div className="flex justify-center">
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <Button
+              variant="outline"
+              size="sm"
               className="cursor-pointer"
               onClick={() => window.location.reload()}
             >
@@ -125,7 +124,7 @@ export default function Home() {
           </div>
         </div>
       )}
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
         {isLoading ? (
           // Skeleton loading placeholders

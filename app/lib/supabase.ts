@@ -1,7 +1,6 @@
 // app/lib/supabase.ts
 import { createClient } from '@supabase/supabase-js';
-import type { Category, Question, QuizResult, UserAnswer } from '../types';
-import { toast } from 'sonner';
+import type { Category, Question, QuizResult } from '../types';
 
 // Initialize Supabase client with environment variables
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
@@ -39,7 +38,7 @@ export async function getCategories() {
     const { data, error } = await supabase
       .from('categories')
       .select('id, name, description, icon');
-    
+
     if (error) throw error;
     logDebug('Categories fetched successfully', data?.length);
     return data as Omit<Category, 'questions'>[];
@@ -53,14 +52,14 @@ export async function getCategories() {
 export async function getQuestionsByCategory(categoryId: number) {
   try {
     logDebug(`Fetching questions for category ${categoryId}`);
-    
+
     const { data, error } = await supabase
       .from('questions')
       .select('*')
       .eq('category_id', categoryId);
-    
+
     if (error) throw error;
-    
+
     // Transform the data to match our type structure
     const questions = data.map(q => ({
       id: q.id,
@@ -70,7 +69,7 @@ export async function getQuestionsByCategory(categoryId: number) {
       explanation: q.explanation,
       reference: q.reference
     })) as Question[];
-    
+
     logDebug(`Fetched ${questions.length} questions for category ${categoryId}`);
     return questions;
   } catch (error) {
@@ -83,24 +82,24 @@ export async function getQuestionsByCategory(categoryId: number) {
 export async function getCategoryWithQuestions(categoryId: number): Promise<Category> {
   try {
     logDebug(`Fetching category ${categoryId} with questions`);
-    
+
     // Get the category
     const { data: categoryData, error: categoryError } = await supabase
       .from('categories')
       .select('id, name, description, icon')
       .eq('id', categoryId)
       .single();
-    
+
     if (categoryError) throw categoryError;
-    
+
     // Get the questions for this category
     const questions = await getQuestionsByCategory(categoryId);
-    
+
     const result = {
       ...categoryData,
       questions
     } as Category;
-    
+
     logDebug(`Successfully fetched category ${categoryId} with ${questions.length} questions`);
     return result;
   } catch (error) {
@@ -113,19 +112,19 @@ export async function getCategoryWithQuestions(categoryId: number): Promise<Cate
 export async function saveQuizResult(userId: string, result: QuizResult) {
   try {
     logDebug('Saving quiz result', { userId, categoryId: result.categoryId });
-    
+
     // First, make sure we have the category name
     const { data: categoryData, error: categoryError } = await supabase
       .from('categories')
       .select('name')
       .eq('id', result.categoryId)
       .single();
-    
+
     if (categoryError) {
       logError('Error fetching category name', categoryError);
       throw categoryError;
     }
-    
+
     // Simplified answers for storage
     const simplifiedAnswers = result.answers.map(answer => ({
       questionId: answer.questionId,
@@ -133,7 +132,7 @@ export async function saveQuizResult(userId: string, result: QuizResult) {
       isCorrect: answer.isCorrect,
       timeRemaining: answer.timeRemaining
     }));
-    
+
     // Insert the quiz result with explicit logging
     const { data, error } = await supabase
       .from('quiz_results')
@@ -146,13 +145,13 @@ export async function saveQuizResult(userId: string, result: QuizResult) {
         completed_at: new Date().toISOString(),
         answers: simplifiedAnswers
       });
-    
+
     if (error) {
       logError('Error inserting quiz result', error);
       console.error('Full error details:', error);
       return { success: false, error };
     }
-    
+
     logDebug('Quiz result saved successfully');
     return { success: true, data };
   } catch (error) {
@@ -164,12 +163,12 @@ export async function saveQuizResult(userId: string, result: QuizResult) {
 
 // Get recent quiz results for user
 export async function getRecentQuizResults(userId: string, limit = 5) {
-    try {
-      logDebug(`Fetching recent quiz results for user ${userId}`);
-      
-      const { data, error } = await supabase
-        .from('quiz_results')
-        .select(`
+  try {
+    logDebug(`Fetching recent quiz results for user ${userId}`);
+
+    const { data, error } = await supabase
+      .from('quiz_results')
+      .select(`
           id, 
           category_id,
           category_name,
@@ -177,27 +176,27 @@ export async function getRecentQuizResults(userId: string, limit = 5) {
           total_questions, 
           completed_at
         `)
-        .eq('user_id', userId)
-        .order('completed_at', { ascending: false })
-        .limit(limit);
-      
-      if (error) throw error;
-      
-      // Transform the data to match our type structure
-      const formattedResults = data.map(result => ({
-        id: result.id,
-        categoryId: result.category_id,
-        categoryName: result.category_name,
-        score: result.score,
-        totalQuestions: result.total_questions,
-        completedAt: result.completed_at
-      }));
-      
-      logDebug(`Fetched ${formattedResults?.length} recent quiz results`);
-      return formattedResults;
-    } catch (error) {
-      logError(`Error fetching recent quiz results for user ${userId}`, error);
-      // Return empty array instead of throwing, to avoid breaking the UI
-      return [];
-    }
+      .eq('user_id', userId)
+      .order('completed_at', { ascending: false })
+      .limit(limit);
+
+    if (error) throw error;
+
+    // Transform the data to match our type structure
+    const formattedResults = data.map(result => ({
+      id: result.id,
+      categoryId: result.category_id,
+      categoryName: result.category_name,
+      score: result.score,
+      totalQuestions: result.total_questions,
+      completedAt: result.completed_at
+    }));
+
+    logDebug(`Fetched ${formattedResults?.length} recent quiz results`);
+    return formattedResults;
+  } catch (error) {
+    logError(`Error fetching recent quiz results for user ${userId}`, error);
+    // Return empty array instead of throwing, to avoid breaking the UI
+    return [];
   }
+}
