@@ -35,6 +35,8 @@ body {
   --accent-foreground: oklch(0.21 0.006 285.885);
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(0.577 0.245 27.325);
+  --success: oklch(0.46 0.16 142.475);
+  --success-foreground: oklch(0.985 0 0);
   --border: oklch(0.92 0.004 286.32);
   --input: oklch(0.92 0.004 286.32);
   --ring: oklch(0.705 0.015 286.067);
@@ -71,6 +73,8 @@ body {
   --accent-foreground: oklch(0.985 0 0);
   --destructive: oklch(0.396 0.141 25.723);
   --destructive-foreground: oklch(0.637 0.237 25.331);
+  --success: oklch(0.46 0.16 142.475);
+  --success-foreground: oklch(0.985 0 0);
   --border: oklch(0.274 0.006 286.033);
   --input: oklch(0.274 0.006 286.033);
   --ring: oklch(0.442 0.017 285.786);
@@ -106,6 +110,8 @@ body {
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -155,4 +161,46 @@ body {
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Custom responsive breakpoint for extra small screens */
+@custom-media --xs (min-width: 480px);
+
+@variant xs-only (@media (min-width: 480px));
+@variant xs-max (@media (max-width: 479px));
+
+/* Add cursor-pointer to interactive elements */
+button, 
+a[href],
+input[type="submit"],
+input[type="button"],
+input[type="reset"],
+input[type="file"],
+label[for],
+select,
+summary,
+[role="button"],
+.cursor-pointer {
+  cursor: pointer;
+}
+
+/* Success styles for shadcn/ui */
+.bg-success {
+  background-color: var(--success);
+}
+
+.text-success {
+  color: var(--success);
+}
+
+.border-success {
+  border-color: var(--success);
+}
+
+.bg-success\/10 {
+  background-color: color-mix(in oklch, var(--success), transparent 90%);
+}
+
+.text-success-foreground {
+  color: var(--success-foreground);
 }
