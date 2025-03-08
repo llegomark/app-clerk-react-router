@@ -8,11 +8,7 @@ import { Timer } from './timer';
 import { Separator } from '~/components/ui/separator';
 import { toast } from 'sonner';
 import type { Question, UserAnswer } from '~/types';
-import {
-    addBookmark,
-    removeBookmark,
-    isQuestionBookmarked
-} from '~/lib/bookmark-service';
+import { useBookmarkService } from '~/lib/bookmark-service';
 
 interface QuestionCardProps {
     question: Question;
@@ -43,17 +39,36 @@ export function QuestionCard({
     const [bookmarked, setBookmarked] = useState(false);
     const [isCheckingBookmark, setIsCheckingBookmark] = useState(true);
 
+    const { isQuestionBookmarked, addBookmark, removeBookmark } = useBookmarkService();
+
     // Check if the question is bookmarked when the component mounts or question changes
     useEffect(() => {
+        let isMounted = true;
+
         async function checkBookmarkStatus() {
-            setIsCheckingBookmark(true);
-            const { isBookmarked } = await isQuestionBookmarked(question.id);
-            setBookmarked(isBookmarked);
-            setIsCheckingBookmark(false);
+            try {
+                console.log("Checking bookmark status for question:", question.id);
+                const { isBookmarked } = await isQuestionBookmarked(question.id);
+                console.log("Bookmark status result:", isBookmarked);
+
+                if (isMounted) {
+                    setBookmarked(isBookmarked);
+                }
+            } catch (error) {
+                console.error("Error checking bookmark status:", error);
+            } finally {
+                if (isMounted) {
+                    setIsCheckingBookmark(false);
+                }
+            }
         }
 
         checkBookmarkStatus();
-    }, [question.id]);
+
+        return () => {
+            isMounted = false;
+        };
+    }, [question.id, isQuestionBookmarked]);
 
     const handleOptionClick = (optionIndex: number) => {
         if (hasAnswered || !isTimerRunning) return;
@@ -65,39 +80,60 @@ export function QuestionCard({
         onTimeUp();
     };
 
-    const handleToggleBookmark = async (e: React.MouseEvent) => {
-        // Stop event propagation to prevent it from triggering parent click handlers
+    // Enhanced bookmark handler with better error reporting
+    const handleBookmarkClick = async (e: React.MouseEvent) => {
+        e.preventDefault();
         e.stopPropagation();
 
-        if (isCheckingBookmark) return;
+        console.log("Bookmark button clicked - current state:", bookmarked ? "bookmarked" : "not bookmarked");
+
+        if (isCheckingBookmark) {
+            console.log("Still checking bookmark status, ignoring click");
+            return;
+        }
+
+        setIsCheckingBookmark(true);
 
         try {
             if (bookmarked) {
+                console.log("Attempting to remove bookmark for question:", question.id);
                 const { success } = await removeBookmark(question.id);
+
                 if (success) {
+                    console.log("Successfully removed bookmark");
                     setBookmarked(false);
-                    toast.success('Question removed from bookmarks');
+                    toast.success('Bookmark removed');
                 } else {
-                    throw new Error('Failed to remove bookmark');
+                    console.error("Failed to remove bookmark - no error thrown but operation unsuccessful");
+                    toast.error('Failed to remove bookmark');
                 }
             } else {
+                console.log("Attempting to add bookmark for question:", question.id);
+                console.log("Category ID:", categoryId);
+                console.log("Category Name:", categoryName);
+
                 const { success } = await addBookmark(question, categoryId, categoryName);
+
                 if (success) {
+                    console.log("Successfully added bookmark");
                     setBookmarked(true);
-                    toast.success('Question added to bookmarks');
+                    toast.success('Bookmark added');
                 } else {
-                    throw new Error('Failed to bookmark question');
+                    console.error("Failed to add bookmark - no error thrown but operation unsuccessful");
+                    toast.error('Failed to add bookmark');
                 }
             }
         } catch (error) {
-            console.error('Bookmark error:', error);
-            toast.error('Failed to update bookmark');
+            console.error("Bookmark operation error:", error);
+            toast.error('Bookmark operation failed');
+        } finally {
+            setIsCheckingBookmark(false);
         }
     };
 
     return (
         <div className="max-w-2xl mx-auto space-y-4">
-            {/* Progress indicator - subtle and less distracting */}
+            {/* Progress indicator */}
             <div className="flex items-center justify-between px-1 mb-1">
                 <div className="text-xs text-muted-foreground">
                     Question {questionNumber} of {totalQuestions}
@@ -130,30 +166,29 @@ export function QuestionCard({
 
                 <CardContent className="p-5">
                     {/* Question text with bookmark button */}
-                    <div className="mb-6 flex justify-between items-start gap-4">
-                        <h2 className="text-base sm:text-base font-medium leading-relaxed text-foreground flex-1">
+                    <div className="flex justify-between items-start gap-2 mb-6">
+                        <h2 className="text-base font-medium leading-relaxed text-foreground flex-1">
                             {question.question}
                         </h2>
 
-                        {/* Bookmark button - fixed for better clickability */}
-                        <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            className={cn(
-                                "shrink-0 mt-0.5 cursor-pointer z-10",
-                                bookmarked ? "text-amber-500 hover:text-amber-600" : "text-muted-foreground hover:text-foreground",
-                                isCheckingBookmark && "opacity-50 pointer-events-none"
-                            )}
-                            onClick={handleToggleBookmark}
-                            title={bookmarked ? "Remove bookmark" : "Bookmark this question"}
-                            disabled={isCheckingBookmark}
+                        {/* Enhanced bookmark button with clearer styling and explicit href to prevent default */}
+                        <a
+                            href="#bookmark"
+                            onClick={handleBookmarkClick}
+                            style={{
+                                display: 'inline-block',
+                                padding: '8px',
+                                cursor: isCheckingBookmark ? 'wait' : 'pointer',
+                                color: bookmarked ? '#f59e0b' : '#64748b',
+                                background: 'transparent'
+                            }}
+                            title={bookmarked ? "Remove bookmark" : "Add bookmark"}
                         >
-                            <BookmarkIcon className="size-5" />
-                        </Button>
+                            <BookmarkIcon size={20} />
+                        </a>
                     </div>
 
-                    {/* Options - cleaner design with better hover states */}
+                    {/* Options - no indicators */}
                     <div className="space-y-2.5">
                         {question.options.map((option, index) => {
                             const isCorrectOption = index === question.correctAnswer;
@@ -181,23 +216,6 @@ export function QuestionCard({
                                     <div className="flex items-start gap-2">
                                         <span>{option}</span>
                                     </div>
-
-                                    {/* Subtle indicators for correct/incorrect answers */}
-                                    {isCorrectAnswer && (
-                                        <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-success" viewBox="0 0 20 20" fill="currentColor">
-                                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                            </svg>
-                                        </div>
-                                    )}
-
-                                    {isIncorrectAnswer && (
-                                        <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-destructive" viewBox="0 0 20 20" fill="currentColor">
-                                                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                                            </svg>
-                                        </div>
-                                    )}
                                 </Button>
                             );
                         })}

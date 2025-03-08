@@ -32,7 +32,7 @@ import {
     DropdownMenuTrigger
 } from '~/components/ui/dropdown-menu';
 import { ProtectedRoute } from '~/components/protected-route';
-import { getBookmarkedQuestions, removeBookmark } from '~/lib/bookmark-service';
+import { useBookmarkService } from '~/lib/bookmark-service';
 import { useQuizStore } from '~/lib/store';
 import type { Database } from '~/lib/supabase-types';
 import type { Question } from '~/types';
@@ -54,10 +54,48 @@ export default function BookmarksPage() {
 
 type BookmarkedQuestion = Database['public']['Tables']['bookmarked_questions']['Row'];
 
+// Function to properly reconstruct a complete Question object from the bookmark data
+function reconstructQuestion(bookmark: BookmarkedQuestion): Question {
+    // Check if we have the full question_data JSON
+    if (bookmark.question_data) {
+        try {
+            // Parse the question data if it's a string
+            const questionData = typeof bookmark.question_data === 'string'
+                ? JSON.parse(bookmark.question_data)
+                : bookmark.question_data;
+
+            // Combine the data into a complete Question object
+            return {
+                id: bookmark.question_id,
+                question: bookmark.question_text,
+                options: questionData.options || ['Option A', 'Option B', 'Option C', 'Option D'],
+                correctAnswer: questionData.correctAnswer || 0,
+                explanation: questionData.explanation || 'No explanation available',
+                reference: questionData.reference || undefined
+            };
+        } catch (e) {
+            console.error('Error parsing question data:', e);
+        }
+    }
+
+    // If no complete data is available or there was an error parsing it,
+    // return a basic Question object with placeholders
+    return {
+        id: bookmark.question_id,
+        question: bookmark.question_text,
+        options: ['Option A', 'Option B', 'Option C', 'Option D'], // Placeholder options
+        correctAnswer: 0, // Default to first option
+        explanation: 'No explanation available',
+    };
+}
+
 function BookmarksContent() {
     const navigate = useNavigate();
     const { user } = useUser();
     const { startQuiz } = useQuizStore();
+
+    // Use our custom hook
+    const { getBookmarkedQuestions, removeBookmark } = useBookmarkService();
 
     const [bookmarks, setBookmarks] = useState<BookmarkedQuestion[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -82,7 +120,9 @@ function BookmarksContent() {
 
             if (error) throw error;
 
-            setBookmarks(bookmarks);
+            // Process the retrieved data to ensure type safety
+            const processedBookmarks: BookmarkedQuestion[] = bookmarks || [];
+            setBookmarks(processedBookmarks);
         } catch (err: any) {
             console.error('Error loading bookmarks:', err);
             setError(err.message || 'Failed to load your bookmarked questions');
@@ -167,15 +207,10 @@ function BookmarksContent() {
             return;
         }
 
-        // Create questions from bookmarks
-        const questions: Question[] = bookmarksToUse.map(bookmark => ({
-            id: bookmark.question_id,
-            question: bookmark.question_text,
-            // These are placeholder values that will be replaced with real data when we fetch the question
-            options: ['Option A', 'Option B', 'Option C', 'Option D'],
-            correctAnswer: 0,
-            explanation: 'Loading explanation...',
-        }));
+        // Create complete questions from bookmarks using the reconstruction function
+        const questions: Question[] = bookmarksToUse.map(bookmark =>
+            reconstructQuestion(bookmark)
+        );
 
         // Create a custom category for bookmarked questions
         const bookmarkedCategory = {
@@ -433,6 +468,25 @@ function BookmarksContent() {
                             </CardHeader>
                             <CardContent className="py-2 px-4">
                                 <p className="text-sm">{bookmark.question_text}</p>
+
+                                {/* Display preview of options if available */}
+                                {bookmark.question_data && (
+                                    <div className="mt-2 text-xs text-muted-foreground">
+                                        <p className="font-medium">Options:</p>
+                                        <div className="pl-3 mt-1">
+                                            {(() => {
+                                                try {
+                                                    const data = JSON.parse(bookmark.question_data);
+                                                    return data.options?.slice(0, 2).map((option: string, index: number) => (
+                                                        <p key={index} className="truncate">• {option}{index === 1 && data.options.length > 2 ? ' ...' : ''}</p>
+                                                    ));
+                                                } catch (e) {
+                                                    return null;
+                                                }
+                                            })()}
+                                        </div>
+                                    </div>
+                                )}
                             </CardContent>
                             <CardFooter className="py-3 px-4 text-xs text-muted-foreground flex justify-between">
                                 <span>Question ID: {bookmark.question_id}</span>

@@ -87,6 +87,7 @@ export interface Database {
                     category_name: string
                     question_text: string
                     bookmarked_at: string
+                    question_data?: string // Added this field
                 }
                 Insert: {
                     id?: number
@@ -96,6 +97,7 @@ export interface Database {
                     category_name: string
                     question_text: string
                     bookmarked_at?: string
+                    question_data?: string // Added this field
                 }
                 Update: {
                     id?: number
@@ -105,6 +107,7 @@ export interface Database {
                     category_name?: string
                     question_text?: string
                     bookmarked_at?: string
+                    question_data?: string // Added this field
                 }
                 Relationships: [
                     {
