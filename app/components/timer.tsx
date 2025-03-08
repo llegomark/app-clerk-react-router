@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { cn } from '~/lib/utils';
 import { Progress } from '~/components/ui/progress';
+import { ClockIcon } from 'lucide-react';
 
 interface TimerProps {
     duration: number; // duration in seconds
@@ -14,11 +15,13 @@ interface TimerProps {
 export function Timer({ duration, isRunning, onTimeUp, onTimeUpdate }: TimerProps) {
     const [timeRemaining, setTimeRemaining] = useState(duration);
     const [isWarning, setIsWarning] = useState(false);
+    const [isCritical, setIsCritical] = useState(false);
 
     // Reset timer when duration changes or when isRunning becomes true
     useEffect(() => {
         setTimeRemaining(duration);
         setIsWarning(false);
+        setIsCritical(false);
     }, [duration, isRunning]);
 
     useEffect(() => {
@@ -32,6 +35,11 @@ export function Timer({ duration, isRunning, onTimeUp, onTimeUpdate }: TimerProp
                     // Set warning state when 30 seconds or less remain
                     if (newTime <= 30 && !isWarning) {
                         setIsWarning(true);
+                    }
+
+                    // Set critical state when 10 seconds or less remain
+                    if (newTime <= 10 && !isCritical) {
+                        setIsCritical(true);
                     }
 
                     // Update parent component with current time
@@ -59,7 +67,7 @@ export function Timer({ duration, isRunning, onTimeUp, onTimeUpdate }: TimerProp
         return () => {
             if (interval) clearInterval(interval);
         };
-    }, [isRunning, timeRemaining, onTimeUp, onTimeUpdate, isWarning]);
+    }, [isRunning, timeRemaining, onTimeUp, onTimeUpdate, isWarning, isCritical]);
 
     // Format time as M:SS
     const formatTime = (seconds: number) => {
@@ -71,15 +79,28 @@ export function Timer({ duration, isRunning, onTimeUp, onTimeUpdate }: TimerProp
     const progressValue = (timeRemaining / duration) * 100;
 
     return (
-        <div className="flex flex-col w-full">
-            <div className="flex justify-between items-center mb-1">
-                <span className="font-medium text-sm">Time: {formatTime(timeRemaining)}</span>
-            </div>
+        <div className="flex items-center gap-1.5">
+            <ClockIcon className={cn(
+                "size-3.5",
+                isCritical ? "text-destructive" :
+                    isWarning ? "text-amber-500" :
+                        "text-muted-foreground"
+            )} />
+            <span className={cn(
+                "text-xs font-normal",
+                isCritical ? "text-destructive" :
+                    isWarning ? "text-amber-500" :
+                        "text-muted-foreground"
+            )}>
+                {formatTime(timeRemaining)}
+            </span>
             <Progress
                 value={progressValue}
                 className={cn(
-                    "h-2 w-full",
-                    isWarning ? "bg-muted progress-indicator:bg-destructive" : "bg-muted progress-indicator:bg-primary"
+                    "h-1 w-8",
+                    isCritical ? "progress-indicator:bg-destructive" :
+                        isWarning ? "progress-indicator:bg-amber-500" :
+                            "progress-indicator:bg-primary/50"
                 )}
             />
         </div>

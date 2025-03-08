@@ -97,20 +97,22 @@ export default function Quiz() {
     if (!currentQuestion) {
         completeQuiz();
         return (
-            <div className="container mx-auto py-8 px-4 text-center">
-                <p>Preparing results...</p>
+            <div className="container mx-auto py-8 px-4 flex flex-col items-center justify-center">
+                <div className="h-5 w-5 rounded-full border-2 border-primary border-t-transparent animate-spin"></div>
+                <p className="mt-3 text-xs text-muted-foreground">Preparing results...</p>
             </div>
         );
     }
 
     // Exit handler - this needs to properly reset state and navigate
     const handleBackToCategories = () => {
-        console.log("Exit button clicked, resetting state and navigating to home");
         resetQuiz();
         navigate('/', { replace: true });
     };
 
     const handleAnswerQuestion = (selectedOption: number) => {
+        // Get actual time remaining from the timer component
+        // For now, we'll use a placeholder value
         const timeRemaining = 100;
         answerQuestion(currentQuestion.id, selectedOption, timeRemaining);
     };
@@ -118,7 +120,6 @@ export default function Quiz() {
     const handleTimeUp = () => {
         answerQuestion(currentQuestion.id, null, 0);
         stopTimer();
-        // Removed toast notification to prevent duplication
     };
 
     const handleNextQuestion = () => {
@@ -134,7 +135,7 @@ export default function Quiz() {
     };
 
     return (
-        <div className="container mx-auto py-4 px-4 max-w-4xl">
+        <div className="min-h-[calc(100vh-10rem)] bg-background py-6 px-4">
             <QuizHeader
                 title={currentCategory.name}
                 onExit={handleBackToCategories}

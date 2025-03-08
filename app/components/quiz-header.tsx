@@ -26,14 +26,14 @@ export function QuizHeader({ title, onExit }: QuizHeaderProps) {
     };
 
     return (
-        <div className="mb-4">
+        <div className="max-w-2xl mx-auto px-1 mb-5">
             <div className="flex items-center justify-between">
                 <AlertDialog>
                     <AlertDialogTrigger asChild>
                         <Button
                             variant="ghost"
                             size="sm"
-                            className="cursor-pointer"
+                            className="cursor-pointer text-muted-foreground hover:text-foreground h-8 px-2"
                         >
                             <ArrowLeftIcon className="size-4" />
                         </Button>
@@ -58,7 +58,7 @@ export function QuizHeader({ title, onExit }: QuizHeaderProps) {
                     </AlertDialogContent>
                 </AlertDialog>
 
-                <h2 className="text-lg font-medium text-center flex-1">{title}</h2>
+                <h2 className="text-sm font-medium text-foreground text-center">{title}</h2>
                 <div className="w-8"></div> {/* Empty space for balance */}
             </div>
         </div>
