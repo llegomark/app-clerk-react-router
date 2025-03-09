@@ -5,6 +5,7 @@ import { Button } from '~/components/ui/button';
 import { ArrowRightIcon, BookOpenIcon, InfoIcon, ClockIcon } from 'lucide-react';
 import { cn } from '~/lib/utils';
 import { Timer } from './timer';
+import { Progress } from '~/components/ui/progress';
 import { Separator } from '~/components/ui/separator';
 import { toast } from 'sonner';
 import type { Question, ShuffledQuestion, UserAnswer } from '~/types';
@@ -55,11 +56,11 @@ export function QuestionCard({
     return (
         <div className="max-w-2xl mx-auto space-y-4">
             {/* Progress indicator */}
-            <div className="flex items-center justify-between px-1 mb-1">
-                <div className="text-xs text-muted-foreground">
-                    Question {questionNumber} of {totalQuestions}
-                </div>
-                <div className="w-28">
+            <div className="space-y-2 px-1 mb-4">
+                <div className="flex items-center justify-between">
+                    <div className="text-xs text-muted-foreground">
+                        Question {questionNumber} of {totalQuestions}
+                    </div>
                     <Timer
                         key={`timer-${question.id}-${isTimerRunning}`}
                         duration={120}
@@ -68,6 +69,17 @@ export function QuestionCard({
                         onTimeUpdate={handleTimeUpdate} // Pass the time update handler
                     />
                 </div>
+                <Progress
+                    value={(currentTimeRemaining / 120) * 100}
+                    className={cn(
+                        "h-2",
+                        currentTimeRemaining <= 10
+                            ? "bg-background [&>div]:bg-destructive"
+                            : currentTimeRemaining <= 30
+                                ? "bg-background [&>div]:bg-amber-500"
+                                : "bg-background [&>div]:bg-primary"
+                    )}
+                />
             </div>
 
             <Card className="border-border/40 shadow-sm">

@@ -104,15 +104,6 @@ export function Timer({ duration, isRunning, onTimeUp, onTimeUpdate }: TimerProp
             )}>
                 {formatTime(timeRemaining)}
             </span>
-            <Progress
-                value={progressValue}
-                className={cn(
-                    "h-1 w-8",
-                    isCritical ? "progress-indicator:bg-destructive" :
-                        isWarning ? "progress-indicator:bg-amber-500" :
-                            "progress-indicator:bg-primary/50"
-                )}
-            />
         </div>
     );
 }
