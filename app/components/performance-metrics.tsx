@@ -24,11 +24,12 @@ interface PerformanceMetricsProps {
         score: number;
         totalQuestions: number;
     };
+    totalQuizCount?: number;
 }
 
-export function PerformanceMetrics({ allResults, currentResult }: PerformanceMetricsProps) {
-    // Calculate metrics
-    const quizzesTaken = allResults.length;
+export function PerformanceMetrics({ allResults, currentResult, totalQuizCount }: PerformanceMetricsProps) {
+    // Calculate metrics - Use totalQuizCount if provided, otherwise add 1 to include the current quiz
+    const quizzesTaken = totalQuizCount !== undefined ? totalQuizCount + 1 : allResults.length + 1;
 
     // Calculate percentage scores
     const currentPercentage = (currentResult.score / currentResult.totalQuestions) * 100;

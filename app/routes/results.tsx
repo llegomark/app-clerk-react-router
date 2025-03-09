@@ -87,6 +87,7 @@ function ResultsContent() {
     } = useQuizStore();
 
     const [previousResults, setPreviousResults] = useState<RecentQuizResult[]>([]);
+    const [totalQuizCount, setTotalQuizCount] = useState(0);
     const [isLoadingHistory, setIsLoadingHistory] = useState(false);
 
     useEffect(() => {
@@ -103,8 +104,9 @@ function ResultsContent() {
             try {
                 setIsLoadingHistory(true);
                 const userId = user.id;
-                const results = await getRecentQuizResults(userId, 10); // Get last 10 results
+                const { results, totalCount } = await getRecentQuizResults(userId, 10); // Get last 10 results
                 setPreviousResults(results);
+                setTotalQuizCount(totalCount);
             } catch (error) {
                 console.error('Error fetching previous results:', error);
                 // We won't show a toast here to keep the UI clean - the chart just won't appear
@@ -290,6 +292,7 @@ function ResultsContent() {
                             score: score,
                             totalQuestions: totalQuestions
                         }}
+                        totalQuizCount={totalQuizCount}
                     />
                     <QuestionBreakdownChart
                         userAnswers={userAnswers}

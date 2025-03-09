@@ -180,10 +180,21 @@ export async function saveQuizResult(userId: string, result: QuizResult) {
 }
 
 // Get recent quiz results for user
-export async function getRecentQuizResults(userId: string, limit = 5) {
+export async function getRecentQuizResults(userId: string, limit = 10) {
   try {
     logDebug(`Fetching recent quiz results for user ${userId}`);
 
+    // First, get the total count to show accurate number of completed quizzes
+    const { count: totalCount, error: countError } = await supabase
+      .from('quiz_results')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', userId);
+
+    if (countError) {
+      logError(`Error counting quiz results for user ${userId}`, countError);
+    }
+
+    // Get the most recent results for the charts and statistics
     const { data, error } = await supabase
       .from('quiz_results')
       .select(`
@@ -211,10 +222,19 @@ export async function getRecentQuizResults(userId: string, limit = 5) {
     }));
 
     logDebug(`Fetched ${formattedResults?.length} recent quiz results`);
-    return formattedResults;
+    logDebug(`Total quiz count for user: ${totalCount || 'unknown'}`);
+
+    // Return both the formatted results and the total count
+    return {
+      results: formattedResults,
+      totalCount: totalCount || 0
+    };
   } catch (error) {
     logError(`Error fetching recent quiz results for user ${userId}`, error);
     // Return empty array instead of throwing, to avoid breaking the UI
-    return [];
+    return {
+      results: [],
+      totalCount: 0
+    };
   }
 }
