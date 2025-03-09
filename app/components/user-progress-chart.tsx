@@ -39,6 +39,7 @@ export function UserProgressChart({ results, currentCategoryId }: UserProgressCh
             score: parseFloat(percentageScore),
             category: result.categoryName,
             categoryId: result.categoryId,
+            id: result.id, // Ensure each data point has a unique ID
             // Is this the current category that was just completed?
             isCurrent: result.categoryId === currentCategoryId
         };
@@ -119,10 +120,24 @@ export function UserProgressChart({ results, currentCategoryId }: UserProgressCh
                                     strokeWidth={2}
                                     activeDot={{ r: 6 }}
                                     dot={(props) => {
+                                        // If props or payload is missing, render an invisible dot instead of null
+                                        if (!props || !props.payload) {
+                                            return (
+                                                <circle
+                                                    cx={0}
+                                                    cy={0}
+                                                    r={0}
+                                                    fill="transparent"
+                                                    stroke="none"
+                                                />
+                                            );
+                                        }
+
                                         // Special styling for current category points
                                         const isCurrent = props.payload.isCurrent;
                                         return (
                                             <circle
+                                                key={`dot-${props.payload.id || props.index}`}
                                                 cx={props.cx}
                                                 cy={props.cy}
                                                 r={isCurrent ? 5 : 4}

@@ -108,7 +108,7 @@ export async function getCategoryWithQuestions(categoryId: number): Promise<Cate
   }
 }
 
-// Save quiz result - Improved version with better error handling
+// Save quiz result - Improved version with better error handling and bookmarked questions support
 export async function saveQuizResult(userId: string, result: QuizResult) {
   try {
     // Don't save results for anonymous users
@@ -119,16 +119,28 @@ export async function saveQuizResult(userId: string, result: QuizResult) {
 
     logDebug('Saving quiz result', { userId, categoryId: result.categoryId });
 
-    // First, make sure we have the category name
-    const { data: categoryData, error: categoryError } = await supabase
-      .from('categories')
-      .select('name')
-      .eq('id', result.categoryId)
-      .single();
+    // Special handling for bookmarked questions category (ID -999)
+    let categoryName = "Bookmarked Questions";
 
-    if (categoryError) {
-      logError('Error fetching category name', categoryError);
-      throw categoryError;
+    // Only try to fetch the category name if it's a regular category (not bookmarked questions)
+    if (result.categoryId !== -999) {
+      try {
+        const { data: categoryData, error: categoryError } = await supabase
+          .from('categories')
+          .select('name')
+          .eq('id', result.categoryId)
+          .single();
+
+        if (categoryError) {
+          logError('Error fetching category name', categoryError);
+          // Continue anyway, we'll use a default name
+        } else {
+          categoryName = categoryData.name;
+        }
+      } catch (catErr) {
+        logError('Exception in category fetch', catErr);
+        // Continue anyway, we'll use a default name
+      }
     }
 
     // Simplified answers for storage
@@ -144,8 +156,8 @@ export async function saveQuizResult(userId: string, result: QuizResult) {
       .from('quiz_results')
       .insert({
         user_id: userId,
-        category_id: result.categoryId,
-        category_name: categoryData.name,
+        category_id: result.categoryId === -999 ? 0 : result.categoryId, // Use 0 for bookmarked questions
+        category_name: categoryName,
         score: result.score,
         total_questions: result.totalQuestions,
         completed_at: new Date().toISOString(),

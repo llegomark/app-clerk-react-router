@@ -39,17 +39,45 @@ export function useBookmarkService() {
             }
 
             // Prepare the bookmark data
+            let questionDataStr;
+            try {
+                // Safely serialize the question data
+                questionDataStr = JSON.stringify({
+                    options: question.options || [],
+                    correctAnswer: question.correctAnswer || 0,
+                    explanation: question.explanation || '',
+                    reference: question.reference || null
+                });
+                console.log('Serialized question data:', questionDataStr);
+            } catch (serializeError) {
+                console.error('Error serializing question data:', serializeError);
+                // Provide fallback data if serialization fails
+                questionDataStr = JSON.stringify({
+                    options: ['Option A', 'Option B', 'Option C', 'Option D'],
+                    correctAnswer: 0,
+                    explanation: 'No explanation available'
+                });
+            }
+
             const bookmarkData = {
                 question_id: question.id,
                 category_id: categoryId,
                 category_name: categoryName,
-                question_text: question.question
-                // Remove question_data temporarily to test if that's causing the issue
+                question_text: question.question,
+                question_data: questionDataStr,
+                // Explicitly set the timestamp if it's a required field
+                bookmarked_at: new Date().toISOString()
             };
 
             console.log('Inserting bookmark with data:', bookmarkData);
 
             // Try to insert the bookmark
+            console.log('Sending to Supabase with data structure:', {
+                table: 'bookmarked_questions',
+                fields: Object.keys(bookmarkData),
+                questionIdType: typeof bookmarkData.question_id
+            });
+
             const { data, error } = await supabase
                 .from('bookmarked_questions')
                 .insert(bookmarkData)
@@ -67,6 +95,51 @@ export function useBookmarkService() {
                     toast.info('Question is already bookmarked');
                     return { success: true, alreadyExists: true };
                 }
+
+                // Handle specific error cases
+                if (error.code === '42P01') {
+                    console.error('Table not found. Check your Supabase setup');
+                    toast.error('Database configuration issue. Please contact support.');
+                    return { success: false, error };
+                }
+
+                if (error.code?.startsWith('PGRST')) {
+                    console.error('PostgREST error. Likely a permissions issue:', error.message);
+                    toast.error('Permission denied. Please sign in again.');
+                    return { success: false, error };
+                }
+
+                // Try a simplified version as fallback if we suspect data issues
+                if (error.code === '23502' || error.message?.includes('null value')) {
+                    console.log('Attempting fallback with minimal data...');
+                    try {
+                        // Try with minimal required fields
+                        const fallbackData = {
+                            question_id: question.id,
+                            category_id: categoryId || 0,
+                            category_name: categoryName || 'Unknown',
+                            question_text: question.question || 'Unknown question',
+                            bookmarked_at: new Date().toISOString()
+                        };
+
+                        const { data: fallbackResult, error: fallbackError } = await supabase
+                            .from('bookmarked_questions')
+                            .insert(fallbackData)
+                            .select('id')
+                            .single();
+
+                        if (!fallbackError) {
+                            console.log('Fallback bookmark added successfully:', fallbackResult);
+                            toast.success('Bookmark added (limited data)');
+                            return { success: true, data: fallbackResult, limited: true };
+                        } else {
+                            console.error('Fallback also failed:', fallbackError);
+                        }
+                    } catch (fallbackErr) {
+                        console.error('Error in fallback attempt:', fallbackErr);
+                    }
+                }
+
                 throw error;
             }
 

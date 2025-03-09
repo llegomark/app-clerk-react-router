@@ -87,17 +87,17 @@ export interface Database {
                     category_name: string
                     question_text: string
                     bookmarked_at: string
-                    question_data?: string // Added this field
+                    question_data?: string
                 }
                 Insert: {
                     id?: number
-                    user_id?: string
+                    user_id?: string  // This is filled by RLS policy
                     question_id: number
                     category_id: number
                     category_name: string
                     question_text: string
                     bookmarked_at?: string
-                    question_data?: string // Added this field
+                    question_data?: string
                 }
                 Update: {
                     id?: number
@@ -107,7 +107,7 @@ export interface Database {
                     category_name?: string
                     question_text?: string
                     bookmarked_at?: string
-                    question_data?: string // Added this field
+                    question_data?: string
                 }
                 Relationships: [
                     {

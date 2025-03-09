@@ -218,8 +218,19 @@ function BookmarksContent() {
             name: 'Bookmarked Questions',
             description: `A custom quiz with ${questions.length} bookmarked questions`,
             icon: '🔖',
-            questions: questions
+            questions: questions,
+            // Add a special flag to help identify this is a bookmarked quiz
+            isBookmarkedQuiz: true,
+            // Store the bookmark IDs used to create this quiz to recreate it later
+            bookmarkIds: bookmarksToUse.map(b => b.id)
         };
+
+        // Save to localStorage to help with Try Again functionality
+        try {
+            localStorage.setItem('lastBookmarkedQuizIds', JSON.stringify(bookmarksToUse.map(b => b.id)));
+        } catch (e) {
+            console.error('Failed to save bookmark IDs to localStorage:', e);
+        }
 
         // Start the quiz with this category
         startQuiz(bookmarkedCategory);
