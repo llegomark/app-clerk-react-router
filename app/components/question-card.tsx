@@ -7,11 +7,11 @@ import { cn } from '~/lib/utils';
 import { Timer } from './timer';
 import { Separator } from '~/components/ui/separator';
 import { toast } from 'sonner';
-import type { Question, UserAnswer } from '~/types';
+import type { Question, ShuffledQuestion, UserAnswer } from '~/types';
 import { useBookmarkService } from '~/lib/bookmark-service';
 
 interface QuestionCardProps {
-    question: Question;
+    question: Question | ShuffledQuestion;
     questionNumber: number;
     totalQuestions: number;
     userAnswer: UserAnswer | undefined;
@@ -191,7 +191,11 @@ export function QuestionCard({
                     {/* Options - no indicators */}
                     <div className="space-y-2.5">
                         {question.options.map((option, index) => {
-                            const isCorrectOption = index === question.correctAnswer;
+                            // Check if we're dealing with a shuffled question
+                            const isCorrectOption = 'optionIndexMap' in question ?
+                                question.optionIndexMap.get(index) === question.correctAnswer :
+                                index === question.correctAnswer;
+
                             const isSelectedOption = userAnswer?.selectedOption === index;
                             const isCorrectAnswer = hasAnswered && isCorrectOption;
                             const isIncorrectAnswer = hasAnswered && isSelectedOption && !isCorrectOption;

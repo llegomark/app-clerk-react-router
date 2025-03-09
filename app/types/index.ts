@@ -16,12 +16,16 @@ export type Question = {
   reference?: Reference;
 };
 
+export type ShuffledQuestion = Question & {
+  optionIndexMap: Map<number, number>;
+};
+
 export type Category = {
   id: number;
   name: string;
   description: string;
   icon: string;
-  questions: Question[];
+  questions: (Question | ShuffledQuestion)[];
 };
 
 export type UserAnswer = {
