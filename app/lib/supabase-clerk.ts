@@ -3,15 +3,20 @@ import { createClient } from '@supabase/supabase-js';
 import { useAuth } from '@clerk/react-router';
 import type { Database } from './supabase-types';
 
+// Environment variables
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
+
+// Singleton instance of the Supabase client
+let supabaseClient: ReturnType<typeof createClient<Database>> | null = null;
+
 // For client-side use
 export function useSupabase() {
     const { getToken } = useAuth();
 
-    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
-    const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
-
-    const createClerkSupabaseClient = () => {
-        return createClient<Database>(supabaseUrl, supabaseKey, {
+    if (!supabaseClient) {
+        // Create the client only once
+        supabaseClient = createClient<Database>(supabaseUrl, supabaseKey, {
             global: {
                 fetch: async (url, options = {}) => {
                     try {
@@ -37,11 +42,16 @@ export function useSupabase() {
                         return fetch(url, options);
                     }
                 }
+            },
+            auth: {
+                persistSession: false, // This helps prevent some auth state conflicts
+                autoRefreshToken: false, // Let Clerk handle the refresh tokens
             }
         });
-    };
+    }
 
-    return createClerkSupabaseClient();
+    // Return the singleton instance
+    return supabaseClient;
 }
 
 // For use in loaders/actions that have access to auth
