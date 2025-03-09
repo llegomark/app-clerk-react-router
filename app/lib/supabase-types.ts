@@ -77,48 +77,7 @@ export interface Database {
                         referencedColumns: ["id"]
                     }
                 ]
-            },
-            bookmarked_questions: {
-                Row: {
-                    id: number
-                    user_id: string
-                    question_id: number
-                    category_id: number
-                    category_name: string
-                    question_text: string
-                    bookmarked_at: string
-                    question_data?: string
-                }
-                Insert: {
-                    id?: number
-                    user_id?: string  // This is filled by RLS policy
-                    question_id: number
-                    category_id: number
-                    category_name: string
-                    question_text: string
-                    bookmarked_at?: string
-                    question_data?: string
-                }
-                Update: {
-                    id?: number
-                    user_id?: string
-                    question_id?: number
-                    category_id?: number
-                    category_name?: string
-                    question_text?: string
-                    bookmarked_at?: string
-                    question_data?: string
-                }
-                Relationships: [
-                    {
-                        foreignKeyName: "bookmarked_questions_user_id_fkey"
-                        columns: ["user_id"]
-                        referencedRelation: "users"
-                        referencedColumns: ["id"]
-                    }
-                ]
             }
-            // Add other tables here as needed
         }
         Views: {
             [_ in never]: never

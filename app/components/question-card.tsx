@@ -2,13 +2,12 @@
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardFooter } from '~/components/ui/card';
 import { Button } from '~/components/ui/button';
-import { ArrowRightIcon, BookOpenIcon, InfoIcon, ClockIcon, BookmarkIcon } from 'lucide-react';
+import { ArrowRightIcon, BookOpenIcon, InfoIcon, ClockIcon } from 'lucide-react';
 import { cn } from '~/lib/utils';
 import { Timer } from './timer';
 import { Separator } from '~/components/ui/separator';
 import { toast } from 'sonner';
 import type { Question, ShuffledQuestion, UserAnswer } from '~/types';
-import { useBookmarkService } from '~/lib/bookmark-service';
 
 interface QuestionCardProps {
     question: Question | ShuffledQuestion;
@@ -36,40 +35,7 @@ export function QuestionCard({
     onNext,
 }: QuestionCardProps) {
     const hasAnswered = userAnswer !== undefined;
-    const [bookmarked, setBookmarked] = useState(false);
-    const [isCheckingBookmark, setIsCheckingBookmark] = useState(true);
     const [currentTimeRemaining, setCurrentTimeRemaining] = useState(120); // Track current time remaining
-
-    const { isQuestionBookmarked, addBookmark, removeBookmark } = useBookmarkService();
-
-    // Check if the question is bookmarked when the component mounts or question changes
-    useEffect(() => {
-        let isMounted = true;
-
-        async function checkBookmarkStatus() {
-            try {
-                console.log("Checking bookmark status for question:", question.id);
-                const { isBookmarked } = await isQuestionBookmarked(question.id);
-                console.log("Bookmark status result:", isBookmarked);
-
-                if (isMounted) {
-                    setBookmarked(isBookmarked);
-                }
-            } catch (error) {
-                console.error("Error checking bookmark status:", error);
-            } finally {
-                if (isMounted) {
-                    setIsCheckingBookmark(false);
-                }
-            }
-        }
-
-        checkBookmarkStatus();
-
-        return () => {
-            isMounted = false;
-        };
-    }, [question.id, isQuestionBookmarked]);
 
     // Handle time updates from the Timer component
     const handleTimeUpdate = (timeRemaining: number) => {
@@ -84,57 +50,6 @@ export function QuestionCard({
     const handleTimeUp = () => {
         toast.warning("Time's up!");
         onTimeUp();
-    };
-
-    // Enhanced bookmark handler with better error reporting
-    const handleBookmarkClick = async (e: React.MouseEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
-
-        console.log("Bookmark button clicked - current state:", bookmarked ? "bookmarked" : "not bookmarked");
-
-        if (isCheckingBookmark) {
-            console.log("Still checking bookmark status, ignoring click");
-            return;
-        }
-
-        setIsCheckingBookmark(true);
-
-        try {
-            if (bookmarked) {
-                console.log("Attempting to remove bookmark for question:", question.id);
-                const { success } = await removeBookmark(question.id);
-
-                if (success) {
-                    console.log("Successfully removed bookmark");
-                    setBookmarked(false);
-                    toast.success('Bookmark removed');
-                } else {
-                    console.error("Failed to remove bookmark - no error thrown but operation unsuccessful");
-                    toast.error('Failed to remove bookmark');
-                }
-            } else {
-                console.log("Attempting to add bookmark for question:", question.id);
-                console.log("Category ID:", categoryId);
-                console.log("Category Name:", categoryName);
-
-                const { success } = await addBookmark(question, categoryId, categoryName);
-
-                if (success) {
-                    console.log("Successfully added bookmark");
-                    setBookmarked(true);
-                    toast.success('Bookmark added');
-                } else {
-                    console.error("Failed to add bookmark - no error thrown but operation unsuccessful");
-                    toast.error('Failed to add bookmark');
-                }
-            }
-        } catch (error) {
-            console.error("Bookmark operation error:", error);
-            toast.error('Bookmark operation failed');
-        } finally {
-            setIsCheckingBookmark(false);
-        }
     };
 
     return (
@@ -172,27 +87,11 @@ export function QuestionCard({
                 )}
 
                 <CardContent className="p-5">
-                    {/* Question text with bookmark button */}
-                    <div className="flex justify-between items-start gap-2 mb-6">
+                    {/* Question text */}
+                    <div className="mb-6">
                         <h2 className="text-base font-medium leading-relaxed text-foreground flex-1">
                             {question.question}
                         </h2>
-
-                        {/* Enhanced bookmark button with clearer styling and explicit href to prevent default */}
-                        <a
-                            href="#bookmark"
-                            onClick={handleBookmarkClick}
-                            style={{
-                                display: 'inline-block',
-                                padding: '8px',
-                                cursor: isCheckingBookmark ? 'wait' : 'pointer',
-                                color: bookmarked ? '#f59e0b' : '#64748b',
-                                background: 'transparent'
-                            }}
-                            title={bookmarked ? "Remove bookmark" : "Add bookmark"}
-                        >
-                            <BookmarkIcon size={20} />
-                        </a>
                     </div>
 
                     {/* Options - no indicators */}
