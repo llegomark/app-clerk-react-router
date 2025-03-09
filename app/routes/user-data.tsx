@@ -14,7 +14,6 @@ import {
     TrashIcon,
     PinIcon,
     BookMarkedIcon,
-    CheckIcon,
     XIcon,
     SearchIcon
 } from 'lucide-react';
