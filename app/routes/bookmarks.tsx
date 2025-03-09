@@ -19,6 +19,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '~/componen
 import {
     Dialog,
     DialogContent,
+    DialogDescription,
     DialogHeader,
     DialogTitle,
     DialogFooter
@@ -526,17 +527,17 @@ function BookmarksContent() {
                 </div>
             )}
 
-            {/* Delete Confirmation Dialog */}
             <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-                <DialogContent className="sm:max-w-md">
+                <DialogContent
+                    className="sm:max-w-md"
+                    aria-describedby="delete-dialog-description"  // Added aria-describedby
+                >
                     <DialogHeader>
                         <DialogTitle>Remove Bookmark</DialogTitle>
-                    </DialogHeader>
-                    <div className="py-3">
-                        <p className="text-sm text-muted-foreground">
+                        <DialogDescription id="delete-dialog-description">
                             Are you sure you want to remove this bookmark? This will not delete the question itself.
-                        </p>
-                    </div>
+                        </DialogDescription>
+                    </DialogHeader>
                     <DialogFooter>
                         <Button
                             variant="outline"

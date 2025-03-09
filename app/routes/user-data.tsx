@@ -4,7 +4,7 @@ import { useUser } from '@clerk/react-router';
 import { format } from 'date-fns';
 import { Button } from '~/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '~/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '~/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '~/components/ui/dialog';
 import { Input } from '~/components/ui/input';
 import { Textarea } from '~/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '~/components/ui/select';
@@ -416,9 +416,17 @@ function StudyNotesContent() {
 
             {/* Create/Edit Note Dialog */}
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogContent className="sm:max-w-md">
+                <DialogContent
+                    className="sm:max-w-md"
+                    aria-describedby="note-dialog-description"  // Added aria-describedby
+                >
                     <DialogHeader>
                         <DialogTitle>{editingNote ? 'Edit Note' : 'Create Note'}</DialogTitle>
+                        <DialogDescription id="note-dialog-description">
+                            {editingNote
+                                ? 'Make changes to your note below.'
+                                : 'Fill in the details to create a new note.'}
+                        </DialogDescription>
                     </DialogHeader>
 
                     <div className="grid gap-4 py-3">
@@ -484,15 +492,16 @@ function StudyNotesContent() {
 
             {/* Delete Confirmation Dialog */}
             <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-                <DialogContent className="sm:max-w-md">
+                <DialogContent
+                    className="sm:max-w-md"
+                    aria-describedby="delete-confirmation-description"  // Added aria-describedby
+                >
                     <DialogHeader>
                         <DialogTitle>Delete Note</DialogTitle>
-                    </DialogHeader>
-                    <div className="py-3">
-                        <p className="text-sm text-muted-foreground">
+                        <DialogDescription id="delete-confirmation-description">
                             Are you sure you want to delete this note? This action cannot be undone.
-                        </p>
-                    </div>
+                        </DialogDescription>
+                    </DialogHeader>
                     <DialogFooter>
                         <Button
                             variant="outline"
