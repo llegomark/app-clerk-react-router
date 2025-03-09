@@ -8,7 +8,7 @@ interface TimerProps {
     duration: number; // duration in seconds
     isRunning: boolean;
     onTimeUp: () => void;
-    onTimeUpdate?: (timeRemaining: number) => void;
+    onTimeUpdate?: (timeRemaining: number) => void; // New callback for time updates
     key?: string | number; // Add key prop to force re-creation
 }
 

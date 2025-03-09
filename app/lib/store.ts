@@ -1,7 +1,7 @@
 // app/lib/store.ts
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
-import type { Category, Question, UserAnswer } from '~/types';
+import type { Category, Question, UserAnswer, ShuffledQuestion } from '~/types';
 import { logDebug } from './supabase';
 import { shuffleArray } from './utils';
 
@@ -35,12 +35,6 @@ interface QuizState {
   // Results
   getScore: () => number;
   getResultPercentage: () => number;
-}
-
-interface ShuffledQuestion extends Question {
-  // Map to track the new positions of options after shuffling
-  // Key: new index, Value: original index
-  optionIndexMap: Map<number, number>;
 }
 
 export const useQuizStore = create<QuizState>()(
@@ -109,7 +103,7 @@ export const useQuizStore = create<QuizState>()(
         });
       },
 
-      // Record the user's answer for the current question
+      // Record the user's answer for the current question with time tracking
       answerQuestion: (questionId, selectedOption, timeRemaining) => {
         const { currentCategory, userAnswers } = get();
         if (!currentCategory) return;
@@ -131,9 +125,11 @@ export const useQuizStore = create<QuizState>()(
         logDebug('Answering question', {
           questionId,
           selectedOption,
+          timeRemaining,  // Now we log the actual time remaining
           // Additional debug info
           originalCorrectAnswer: currentQuestion.correctAnswer,
-          isCorrect
+          isCorrect,
+          timeTaken: 120 - timeRemaining  // Log the time taken to answer
         });
 
         set({
@@ -143,7 +139,7 @@ export const useQuizStore = create<QuizState>()(
               questionId,
               selectedOption,
               isCorrect,
-              timeRemaining,
+              timeRemaining,  // Store the actual time remaining
               answeredAt: new Date(),
             },
           ],

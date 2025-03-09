@@ -18,7 +18,7 @@ interface QuestionCardProps {
     isTimerRunning: boolean;
     categoryId: number;
     categoryName: string;
-    onAnswer: (selectedOption: number) => void;
+    onAnswer: (selectedOption: number, timeRemaining: number) => void;  // Updated to include timeRemaining
     onTimeUp: () => void;
     onNext: () => void;
 }
@@ -38,6 +38,7 @@ export function QuestionCard({
     const hasAnswered = userAnswer !== undefined;
     const [bookmarked, setBookmarked] = useState(false);
     const [isCheckingBookmark, setIsCheckingBookmark] = useState(true);
+    const [currentTimeRemaining, setCurrentTimeRemaining] = useState(120); // Track current time remaining
 
     const { isQuestionBookmarked, addBookmark, removeBookmark } = useBookmarkService();
 
@@ -70,9 +71,14 @@ export function QuestionCard({
         };
     }, [question.id, isQuestionBookmarked]);
 
+    // Handle time updates from the Timer component
+    const handleTimeUpdate = (timeRemaining: number) => {
+        setCurrentTimeRemaining(timeRemaining);
+    };
+
     const handleOptionClick = (optionIndex: number) => {
         if (hasAnswered || !isTimerRunning) return;
-        onAnswer(optionIndex);
+        onAnswer(optionIndex, currentTimeRemaining); // Pass the actual time remaining
     };
 
     const handleTimeUp = () => {
@@ -144,6 +150,7 @@ export function QuestionCard({
                         duration={120}
                         isRunning={isTimerRunning}
                         onTimeUp={handleTimeUp}
+                        onTimeUpdate={handleTimeUpdate} // Pass the time update handler
                     />
                 </div>
             </div>

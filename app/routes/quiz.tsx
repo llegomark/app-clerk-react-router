@@ -119,14 +119,14 @@ function ReviewerContent() {
         navigate('/', { replace: true });
     };
 
-    const handleAnswerQuestion = (selectedOption: number) => {
-        // Note: We're now using the mapped option indexes for correct answer checking
-        // The mapping from shuffled to original indexes is handled in the store
-        const timeRemaining = 100;
+    // Updated to accept timeRemaining parameter
+    const handleAnswerQuestion = (selectedOption: number, timeRemaining: number) => {
+        // Now using the actual time remaining passed from the Timer component via QuestionCard
         answerQuestion(currentQuestion.id, selectedOption, timeRemaining);
     };
 
     const handleTimeUp = () => {
+        // When time is up, pass 0 as the timeRemaining
         answerQuestion(currentQuestion.id, null, 0);
         stopTimer();
     };
