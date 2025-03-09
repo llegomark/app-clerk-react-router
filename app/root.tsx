@@ -12,10 +12,11 @@ import { rootAuthLoader } from "@clerk/react-router/ssr.server";
 import { ClerkProvider, SignedIn, SignedOut, UserButton, SignInButton } from "@clerk/react-router";
 import { Toaster } from "sonner";
 import { BookOpenIcon } from "lucide-react";
-
+import { ThemeProvider } from "./components/theme-provider"
 import type { Route } from "./+types/root";
 import { Footer } from '~/components/footer';
 import stylesheet from "./app.css?url";
+import { ModeToggle } from "./components/mode-toggle";
 
 export async function loader(args: Route.LoaderArgs) {
   return rootAuthLoader(args)
@@ -58,34 +59,38 @@ export default function App({ loaderData }: Route.ComponentProps) {
   const navigate = useNavigate();
 
   return (
+
     <ClerkProvider loaderData={loaderData}>
-      <header className="bg-background border-b py-3">
-        <div className="container mx-auto flex items-center justify-between px-4 max-w-4xl">
-          <div
-            className="flex items-center gap-2 cursor-pointer"
-            onClick={() => navigate('/')}
-          >
-            <BookOpenIcon className="size-5 text-primary" />
-            <span className="font-bold text-lg">NQESH Reviewer Pro</span>
+      <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+        <header className="bg-background border-b py-3">
+          <div className="container mx-auto flex items-center justify-between px-4 max-w-4xl">
+            <div
+              className="flex items-center gap-2 cursor-pointer"
+              onClick={() => navigate('/')}
+            >
+              <BookOpenIcon className="size-5 text-primary" />
+              <span className="font-bold text-lg">NQESH Reviewer Pro</span>
+            </div>
+            <div className="flex items-center gap-4">
+              <ModeToggle />
+              <SignedOut>
+                <SignInButton mode="modal">
+                  <button className="bg-primary text-primary-foreground rounded-md px-4 py-1.5 text-sm font-medium cursor-pointer hover:bg-primary/90">
+                    Sign In
+                  </button>
+                </SignInButton>
+              </SignedOut>
+              <SignedIn>
+                <UserButton />
+              </SignedIn>
+            </div>
           </div>
-          <div>
-            <SignedOut>
-              <SignInButton mode="modal">
-                <button className="bg-primary text-primary-foreground rounded-md px-4 py-1.5 text-sm font-medium cursor-pointer hover:bg-primary/90">
-                  Sign In
-                </button>
-              </SignInButton>
-            </SignedOut>
-            <SignedIn>
-              <UserButton />
-            </SignedIn>
-          </div>
-        </div>
-      </header>
-      <main className="min-h-[calc(100vh-10rem)] bg-background">
-        <Outlet />
-      </main>
-      <Footer />
+        </header>
+        <main className="min-h-[calc(100vh-10rem)] bg-background">
+          <Outlet />
+        </main>
+        <Footer />
+      </ThemeProvider>
     </ClerkProvider>
   );
 }
