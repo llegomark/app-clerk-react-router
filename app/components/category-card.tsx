@@ -19,7 +19,7 @@ export function CategoryCard({ category, onSelect, isLoading = false }: Category
 
         // Check if user is signed in before starting a quiz
         if (!isSignedIn) {
-            toast.error("Please sign in to access quizzes");
+            toast.error("Already have an account? Sign in to start NQESH Reviewer Pro!");
             return;
         }
 

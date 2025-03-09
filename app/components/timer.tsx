@@ -1,5 +1,5 @@
 // app/components/timer.tsx
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { cn } from '~/lib/utils';
 import { Progress } from '~/components/ui/progress';
 import { ClockIcon } from 'lucide-react';
@@ -17,12 +17,27 @@ export function Timer({ duration, isRunning, onTimeUp, onTimeUpdate }: TimerProp
     const [isWarning, setIsWarning] = useState(false);
     const [isCritical, setIsCritical] = useState(false);
 
+    // Use ref for the previous time value to avoid unnecessary effect triggers
+    const prevTimeRef = useRef(timeRemaining);
+
     // Reset timer when duration changes or when isRunning becomes true
     useEffect(() => {
         setTimeRemaining(duration);
         setIsWarning(false);
         setIsCritical(false);
     }, [duration, isRunning]);
+
+    // Effect for time updates to parent - separated from the main timer logic
+    useEffect(() => {
+        // Only call onTimeUpdate when the time actually changes
+        // and not on initial render
+        if (prevTimeRef.current !== timeRemaining && onTimeUpdate) {
+            onTimeUpdate(timeRemaining);
+        }
+
+        // Update the ref with current value
+        prevTimeRef.current = timeRemaining;
+    }, [timeRemaining, onTimeUpdate]);
 
     useEffect(() => {
         let interval: number | undefined;
@@ -40,11 +55,6 @@ export function Timer({ duration, isRunning, onTimeUp, onTimeUpdate }: TimerProp
                     // Set critical state when 10 seconds or less remain
                     if (newTime <= 10 && !isCritical) {
                         setIsCritical(true);
-                    }
-
-                    // Update parent component with current time
-                    if (onTimeUpdate) {
-                        onTimeUpdate(newTime);
                     }
 
                     // Time's up
@@ -67,7 +77,7 @@ export function Timer({ duration, isRunning, onTimeUp, onTimeUpdate }: TimerProp
         return () => {
             if (interval) clearInterval(interval);
         };
-    }, [isRunning, timeRemaining, onTimeUp, onTimeUpdate, isWarning, isCritical]);
+    }, [isRunning, isWarning, isCritical, onTimeUp]);
 
     // Format time as M:SS
     const formatTime = (seconds: number) => {

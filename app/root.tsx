@@ -72,7 +72,6 @@ export default function App({ loaderData }: Route.ComponentProps) {
               <span className="font-bold text-lg">NQESH Reviewer Pro</span>
             </div>
             <div className="flex items-center gap-4">
-              <ModeToggle />
               <SignedOut>
                 <SignInButton mode="modal">
                   <button className="bg-primary text-primary-foreground rounded-md px-4 py-1.5 text-sm font-medium cursor-pointer hover:bg-primary/90">
@@ -83,6 +82,7 @@ export default function App({ loaderData }: Route.ComponentProps) {
               <SignedIn>
                 <UserButton />
               </SignedIn>
+              <ModeToggle />
             </div>
           </div>
         </header>
