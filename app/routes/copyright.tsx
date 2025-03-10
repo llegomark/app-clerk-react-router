@@ -45,6 +45,33 @@ export default function CopyrightNotice() {
 
             <Card className="mb-8">
                 <CardHeader>
+                    <CardTitle className="text-lg">License vs. Ownership</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <p>
+                        By purchasing access to NQESH Reviewer Pro, users are <span className="font-semibold">not</span> purchasing
+                        copyright ownership of any content or materials. Users are purchasing a limited, non-transferable license
+                        to access and use the materials for personal educational purposes only.
+                    </p>
+                    <p>
+                        This license:
+                    </p>
+                    <ul className="space-y-2 ml-6 list-disc">
+                        <li>Does not transfer any intellectual property rights to the user</li>
+                        <li>Is restricted to a single user account and cannot be shared</li>
+                        <li>Permits personal use only for exam preparation purposes</li>
+                        <li>May be revoked for violation of these terms</li>
+                        <li>Expires according to the terms of your purchase or subscription</li>
+                    </ul>
+                    <p>
+                        Upon termination of your access, either through subscription expiration or account termination,
+                        you must cease all use of downloaded or saved materials and destroy any copies in your possession.
+                    </p>
+                </CardContent>
+            </Card>
+
+            <Card className="mb-8">
+                <CardHeader>
                     <CardTitle className="text-lg">Usage Restrictions</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -58,6 +85,8 @@ export default function CopyrightNotice() {
                         <li>Scraping, data mining, or automated collection of content</li>
                         <li>Removing any copyright notices or attributions</li>
                         <li>Publicly displaying or performing content without permission</li>
+                        <li>Claiming ownership or authorship of the materials</li>
+                        <li>Using the materials to create competing products or services</li>
                     </ul>
 
                     <p>
@@ -77,6 +106,9 @@ export default function CopyrightNotice() {
                         Unauthorized use of our intellectual property may result in legal action, including but not limited to
                         claims for copyright infringement, injunctive relief, and monetary damages. We actively monitor for
                         unauthorized use of our materials and will vigorously defend our intellectual property rights.
+                    </p>
+                    <p className="mt-4">
+                        Violations may also result in immediate termination of access without refund, in addition to any legal remedies pursued.
                     </p>
                 </CardContent>
             </Card>

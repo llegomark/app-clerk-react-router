@@ -242,7 +242,7 @@ export default function DepEdOrdersPage() {
                     <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => window.open('https://www.deped.gov.ph/issuances/', '_blank')}
+                        onClick={() => window.open('https://www.deped.gov.ph/deped-orders/', '_blank')}
                         className="gap-1.5 cursor-pointer hidden sm:flex"
                     >
                         <FileIcon className="size-3.5" />
