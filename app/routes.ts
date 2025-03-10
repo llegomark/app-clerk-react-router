@@ -8,6 +8,7 @@ export default [
   { path: "flashcards", file: "routes/flashcards.tsx" },
   { path: "deped-orders", file: "routes/deped-orders.tsx" },
   { path: "study-notes", file: "routes/user-data.tsx" },
+  { path: "dashboard", file: "routes/dashboard.tsx" },
   // Catch-all route at the end to handle any non-matched paths
   { path: "*", file: "routes/404.tsx" },
 ] satisfies RouteConfig;

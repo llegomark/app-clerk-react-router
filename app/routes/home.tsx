@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { useUser } from '@clerk/react-router';
 import { toast } from 'sonner';
-import { FolderIcon, GraduationCapIcon, BookOpenIcon } from 'lucide-react';
+import { FolderIcon, GraduationCapIcon, BookOpenIcon, BarChart4Icon } from 'lucide-react';
 
 import type { Route } from "./+types/home";
 import { CategoryCard } from '~/components/category-card';
@@ -111,7 +111,7 @@ export default function Home() {
       </div>
 
       {/* Study Tools Section */}
-      <div className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
+      <div className="mb-8 grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5">
         <Card
           className="border-muted bg-card/50 transition-all hover:border-primary/40 hover:bg-accent/10 hover:shadow-md cursor-pointer"
           onClick={() => navigate('/deped-orders')}
@@ -145,8 +145,24 @@ export default function Home() {
             </div>
           </CardContent>
         </Card>
-      </div>
 
+        <Card
+          className="border-muted bg-card/50 transition-all hover:border-primary/40 hover:bg-accent/10 hover:shadow-md cursor-pointer"
+          onClick={() => navigate('/dashboard')}
+        >
+          <CardContent className="p-5 flex items-center gap-3">
+            <div className="bg-primary/10 p-2 rounded-full">
+              <BarChart4Icon className="size-5 text-primary" />
+            </div>
+            <div>
+              <h3 className="text-sm font-medium">Dashboard</h3>
+              <p className="text-xs text-muted-foreground mt-1">
+                Track your progress and performance
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
       {error && (
         <div className="mb-6 sm:mb-8 p-4 sm:p-5 rounded-md bg-destructive/10 text-destructive-foreground max-w-lg mx-auto">
           <p className="text-sm text-center mb-3">{error}</p>
