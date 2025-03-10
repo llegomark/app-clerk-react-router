@@ -1,10 +1,17 @@
 // app/routes/deped-orders.tsx
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
-import { ArrowLeftIcon, FileTextIcon } from "lucide-react";
 import { toast } from "sonner";
+import {
+    FileTextIcon,
+    FileIcon,
+    FilterIcon,
+    DownloadIcon
+} from "lucide-react";
 
 import { Button } from "~/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { useDepEdOrdersStore } from "~/lib/deped-orders-store";
 import { DepEdOrdersTable } from "~/components/deped-orders-table";
 import { DepEdOrdersPagination } from "~/components/deped-orders-pagination";
@@ -14,14 +21,15 @@ import type { DepEdOrder, SortState } from "~/types";
 
 export function meta() {
     return [
-        { title: "NQESH Reviewer Pro - DepEd Orders" },
-        { name: "description", content: "Browse and search DepEd Orders" },
+        { title: "DepEd Orders Library - NQESH Reviewer Pro" },
+        { name: "description", content: "Browse and search Department of Education official issuances" },
     ];
 }
 
 export default function DepEdOrdersPage() {
     const navigate = useNavigate();
     const [viewingOrder, setViewingOrder] = useState<DepEdOrder | null>(null);
+    const [activeTab, setActiveTab] = useState("all");
 
     const {
         orders,
@@ -183,6 +191,12 @@ export default function DepEdOrdersPage() {
     const currentPageData = getCurrentPageData();
     const availableYears = getYearsFromData();
 
+    // Filter orders by year for tabs
+    const getOrdersByYear = (year: number | null) => {
+        if (!year) return filteredOrders;
+        return filteredOrders.filter(order => order.year === year);
+    };
+
     // Handle sorting
     const handleSort = (column: SortState['column']) => {
         setSortState({
@@ -209,50 +223,64 @@ export default function DepEdOrdersPage() {
     };
 
     return (
-        <div className="min-h-[calc(100vh-10rem)] bg-background py-6 px-4">
-            {/* Header */}
-            <div className="max-w-5xl mx-auto mb-5">
-                <div className="flex items-center justify-between">
+        <div className="container mx-auto py-6 px-4 max-w-4xl">
+            {/* Header with icon and title/description */}
+            <div className="mb-6">
+                <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                        <div className="bg-primary/10 p-2 rounded-full">
+                            <FileTextIcon className="size-5 text-primary" />
+                        </div>
+                        <div>
+                            <h1 className="text-2xl font-bold">DepEd Orders</h1>
+                            <p className="text-sm text-muted-foreground">
+                                Browse and download Department of Education official issuances
+                            </p>
+                        </div>
+                    </div>
+
                     <Button
-                        variant="ghost"
+                        variant="outline"
                         size="sm"
-                        onClick={() => navigate('/')}
-                        className="cursor-pointer text-muted-foreground hover:text-foreground h-8 px-2"
+                        onClick={() => window.open('https://www.deped.gov.ph/issuances/', '_blank')}
+                        className="gap-1.5 cursor-pointer hidden sm:flex"
                     >
-                        <ArrowLeftIcon className="size-4" />
+                        <FileIcon className="size-3.5" />
+                        <span>Official DepEd Site</span>
                     </Button>
-
-                    <h1 className="text-sm font-medium text-foreground text-center">DepEd Orders</h1>
-
-                    <div className="w-8"></div>
                 </div>
             </div>
 
-            <div className="container mx-auto max-w-5xl">
-                {/* Page Content */}
-                <div className="flex items-center gap-3 mb-5">
-                    <FileTextIcon className="size-5 text-primary" />
-                    <div>
-                        <h2 className="text-base font-medium">DepEd Orders Library</h2>
-                        <p className="text-xs text-muted-foreground">Browse, search, and download Department of Education orders</p>
-                    </div>
-                </div>
+            {/* Main content card */}
+            <Card className="mb-6">
+                <CardHeader className="pb-0">
+                    <CardTitle className="text-lg flex items-center gap-2">
+                        <FilterIcon className="size-4 text-primary" />
+                        Search and Filter
+                    </CardTitle>
+                    <CardDescription>
+                        Find specific DepEd orders by title, number, or year
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="pt-4">
+                    {/* Filters */}
+                    <DepEdOrdersFilters
+                        searchTerm={searchTerm}
+                        yearFilter={yearFilter}
+                        availableYears={availableYears}
+                        onSearchChange={setSearchTerm}
+                        onYearFilterChange={setYearFilter}
+                        onResetFilters={resetFilters}
+                    />
+                </CardContent>
+            </Card>
 
-                {/* Filters */}
-                <DepEdOrdersFilters
-                    searchTerm={searchTerm}
-                    yearFilter={yearFilter}
-                    availableYears={availableYears}
-                    onSearchChange={setSearchTerm}
-                    onYearFilterChange={setYearFilter}
-                    onResetFilters={resetFilters}
-                />
-
-                {/* Error state */}
-                {error && (
-                    <div className="mb-6 p-4 rounded-md bg-destructive/10 text-destructive-foreground max-w-lg mx-auto">
-                        <p className="text-sm text-center mb-3">{error}</p>
-                        <div className="flex justify-center">
+            {/* Error state */}
+            {error && (
+                <Card className="mb-6 border-destructive/50">
+                    <CardContent className="p-6">
+                        <div className="flex flex-col items-center text-center">
+                            <p className="text-sm text-destructive mb-3">{error}</p>
                             <Button
                                 variant="outline"
                                 size="sm"
@@ -262,47 +290,169 @@ export default function DepEdOrdersPage() {
                                 Try Again
                             </Button>
                         </div>
+                    </CardContent>
+                </Card>
+            )}
+
+            {/* Year tabs */}
+            {!error && !isLoading && filteredOrders.length > 0 && (
+                <Tabs
+                    defaultValue="all"
+                    value={activeTab}
+                    onValueChange={setActiveTab}
+                    className="mb-4"
+                >
+                    <div className="flex items-center justify-between mb-2">
+                        <p className="text-xs text-muted-foreground">
+                            {filteredOrders.length} {filteredOrders.length === 1 ? 'result' : 'results'}
+                            {(searchTerm || yearFilter) && ' matching your filters'}
+                        </p>
+
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                                const url = new Blob(
+                                    [JSON.stringify(filteredOrders, null, 2)],
+                                    { type: 'application/json' }
+                                );
+                                const link = document.createElement('a');
+                                link.href = URL.createObjectURL(url);
+                                link.download = 'deped-orders.json';
+                                link.click();
+                                toast.success('Downloaded orders data');
+                            }}
+                            className="gap-1.5 cursor-pointer"
+                        >
+                            <DownloadIcon className="size-3.5" />
+                            <span>Export</span>
+                        </Button>
                     </div>
-                )}
 
-                {/* Results info */}
-                {!error && !isLoading && (
-                    <p className="text-xs text-muted-foreground mb-2">
-                        {filteredOrders.length} {filteredOrders.length === 1 ? 'result' : 'results'}
-                        {(searchTerm || yearFilter) && ' matching your filters'}
-                    </p>
-                )}
+                    <TabsList className="w-full h-auto flex-wrap mb-4">
+                        <TabsTrigger value="all">All Years</TabsTrigger>
+                        {availableYears.slice(0, 5).map(year => (
+                            <TabsTrigger key={year} value={year.toString()}>
+                                {year}
+                            </TabsTrigger>
+                        ))}
+                        {availableYears.length > 5 && (
+                            <TabsTrigger value="more">More...</TabsTrigger>
+                        )}
+                    </TabsList>
 
-                {/* Table */}
-                <DepEdOrdersTable
-                    orders={currentPageData}
-                    sortState={sortState}
-                    onSort={handleSort}
-                    onView={handleViewOrder}
-                    onDownload={handleDownloadOrder}
-                    isLoading={isLoading}
-                />
+                    <TabsContent value="all" className="mt-0">
+                        <DepEdOrdersTable
+                            orders={currentPageData}
+                            sortState={sortState}
+                            onSort={handleSort}
+                            onView={handleViewOrder}
+                            onDownload={handleDownloadOrder}
+                            isLoading={isLoading}
+                        />
+                    </TabsContent>
 
-                {/* Pagination */}
-                {!error && filteredOrders.length > 0 && (
-                    <DepEdOrdersPagination
-                        currentPage={paginationState.pageIndex}
-                        pageCount={pageCount}
-                        pageSize={paginationState.pageSize}
-                        totalItems={filteredOrders.length}
-                        onPageChange={(page) => setPaginationState({ pageIndex: page })}
-                        onPageSizeChange={(size) => setPaginationState({ pageSize: size, pageIndex: 0 })}
-                    />
-                )}
+                    {availableYears.map(year => (
+                        <TabsContent key={year} value={year.toString()} className="mt-0">
+                            <DepEdOrdersTable
+                                orders={getOrdersByYear(year)}
+                                sortState={sortState}
+                                onSort={handleSort}
+                                onView={handleViewOrder}
+                                onDownload={handleDownloadOrder}
+                                isLoading={isLoading}
+                            />
+                        </TabsContent>
+                    ))}
 
-                {/* Order Viewer Dialog */}
-                <DepEdOrderViewer
-                    order={viewingOrder}
-                    isOpen={!!viewingOrder}
-                    onClose={() => setViewingOrder(null)}
-                    onDownload={handleDownloadOrder}
-                />
-            </div>
+                    {availableYears.length > 5 && (
+                        <TabsContent value="more" className="mt-0">
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 mb-4">
+                                {availableYears.slice(5).map(year => (
+                                    <Button
+                                        key={year}
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => {
+                                            setYearFilter(year);
+                                            setActiveTab("all");
+                                        }}
+                                        className="cursor-pointer"
+                                    >
+                                        {year}
+                                    </Button>
+                                ))}
+                            </div>
+                        </TabsContent>
+                    )}
+                </Tabs>
+            )}
+
+            {/* Loading state */}
+            {isLoading && (
+                <Card className="border-muted/50">
+                    <CardContent className="p-6">
+                        <div className="flex flex-col items-center justify-center py-6">
+                            <div className="h-10 w-10 rounded-full border-2 border-primary border-t-transparent animate-spin mb-4"></div>
+                            <p className="text-sm font-medium">Loading DepEd Orders...</p>
+                            <p className="text-xs text-muted-foreground mt-1">This may take a moment</p>
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
+
+            {/* Empty state */}
+            {!isLoading && !error && filteredOrders.length === 0 && (
+                <Card className="border-muted/50">
+                    <CardContent className="p-6">
+                        <div className="flex flex-col items-center justify-center py-6">
+                            <div className="bg-muted/30 p-4 rounded-full mb-4">
+                                <FileTextIcon className="size-8 text-muted-foreground" />
+                            </div>
+                            <h3 className="text-lg font-medium mb-1">No Orders Found</h3>
+                            <p className="text-sm text-muted-foreground text-center max-w-md mb-4">
+                                {searchTerm || yearFilter ?
+                                    "No DepEd orders match your current search filters. Try adjusting your criteria." :
+                                    "There are no DepEd orders available at the moment."}
+                            </p>
+                            {(searchTerm || yearFilter) && (
+                                <Button
+                                    variant="outline"
+                                    onClick={resetFilters}
+                                    className="cursor-pointer"
+                                >
+                                    Clear Filters
+                                </Button>
+                            )}
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
+
+            {/* Table with results (when not loading or error) */}
+            {!isLoading && !error && filteredOrders.length > 0 && activeTab === "all" && (
+                <>
+                    {/* Pagination */}
+                    <div className="mt-4">
+                        <DepEdOrdersPagination
+                            currentPage={paginationState.pageIndex}
+                            pageCount={pageCount}
+                            pageSize={paginationState.pageSize}
+                            totalItems={filteredOrders.length}
+                            onPageChange={(page) => setPaginationState({ pageIndex: page })}
+                            onPageSizeChange={(size) => setPaginationState({ pageSize: size, pageIndex: 0 })}
+                        />
+                    </div>
+                </>
+            )}
+
+            {/* Order Viewer Dialog */}
+            <DepEdOrderViewer
+                order={viewingOrder}
+                isOpen={!!viewingOrder}
+                onClose={() => setViewingOrder(null)}
+                onDownload={handleDownloadOrder}
+            />
         </div>
     );
 }

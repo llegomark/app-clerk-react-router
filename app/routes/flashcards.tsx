@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
-import { ArrowLeftIcon } from 'lucide-react';
+import { BookOpenIcon } from 'lucide-react';
 
 import { useFlashCardStore } from '~/lib/flash-card-store';
 import { FlashCard } from '~/components/flash-card';
@@ -149,91 +149,80 @@ export default function FlashCardsPage() {
         fetchFlashCards();
     }, [setCards]);
 
-    const handleGoBack = () => {
-        navigate('/');
-    };
-
-    const toggleView = () => {
-        setShowList(!showList);
-    };
-
     return (
-        <div className="min-h-[calc(100vh-10rem)] bg-background py-6 px-4">
-            <div className="max-w-2xl mx-auto mb-5">
-                <div className="flex items-center justify-between">
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={handleGoBack}
-                        className="cursor-pointer text-muted-foreground hover:text-foreground h-8 px-2"
-                    >
-                        <ArrowLeftIcon className="size-4" />
-                    </Button>
-
-                    <h2 className="text-sm font-medium text-foreground text-center">NQESH Terminology</h2>
-
-                    <div className="w-8"></div>
+        <div className="container mx-auto py-6 px-4 max-w-4xl">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                <div className="flex items-center gap-2">
+                    <BookOpenIcon className="size-6 text-primary" />
+                    <div>
+                        <h1 className="text-2xl font-bold">Flash Cards</h1>
+                        <p className="text-sm text-muted-foreground">
+                            Review key NQESH terms and definitions
+                        </p>
+                    </div>
                 </div>
             </div>
 
-            <div className="container mx-auto max-w-2xl">
-                {isLoading ? (
-                    <div className="flex flex-col items-center justify-center py-12">
-                        <div className="h-5 w-5 rounded-full border-2 border-primary border-t-transparent animate-spin"></div>
-                        <p className="mt-3 text-xs text-muted-foreground">Loading flash cards...</p>
-                    </div>
-                ) : error ? (
-                    <div className="p-4 rounded-md bg-destructive/10 text-destructive-foreground max-w-lg mx-auto text-center">
-                        <p className="text-xs mb-3">{error}</p>
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => window.location.reload()}
-                            className="cursor-pointer h-8"
-                        >
-                            Try Again
-                        </Button>
-                    </div>
-                ) : (
-                    <>
-                        {!showList && cards.length > 0 && (
-                            <div className="will-change-transform">
-                                <FlashCard
-                                    card={cards[currentCardIndex]}
-                                    isFlipped={isFlipped}
-                                    onFlip={flipCard}
-                                />
-
-                                <FlashCardControls
-                                    currentIndex={currentCardIndex}
-                                    totalCards={cards.length}
-                                    onNext={nextCard}
-                                    onPrevious={previousCard}
-                                    onShuffle={shuffleCards}
-                                    onShowAll={toggleView}
-                                />
-                            </div>
-                        )}
-
-                        {showList && (
-                            <FlashCardsList
-                                cards={cards}
-                                onSelectCard={(index) => {
-                                    goToCard(index);
-                                    setShowList(false);
-                                }}
-                                onClose={toggleView}
+            {isLoading ? (
+                <div className="flex flex-col items-center justify-center py-12">
+                    <div className="h-5 w-5 rounded-full border-2 border-primary border-t-transparent animate-spin"></div>
+                    <p className="mt-3 text-xs text-muted-foreground">Loading flash cards...</p>
+                </div>
+            ) : error ? (
+                <div className="p-4 rounded-md bg-destructive/10 text-destructive-foreground max-w-lg mx-auto text-center">
+                    <p className="text-xs mb-3">{error}</p>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => window.location.reload()}
+                        className="cursor-pointer h-8"
+                    >
+                        Try Again
+                    </Button>
+                </div>
+            ) : (
+                <>
+                    {!showList && cards.length > 0 && (
+                        <div className="will-change-transform">
+                            <FlashCard
+                                card={cards[currentCardIndex]}
+                                isFlipped={isFlipped}
+                                onFlip={flipCard}
                             />
-                        )}
 
-                        {cards.length === 0 && !isLoading && !error && (
-                            <div className="text-center py-12">
-                                <p className="text-muted-foreground text-sm">No flash cards available.</p>
-                            </div>
-                        )}
-                    </>
-                )}
-            </div>
+                            <FlashCardControls
+                                currentIndex={currentCardIndex}
+                                totalCards={cards.length}
+                                onNext={nextCard}
+                                onPrevious={previousCard}
+                                onShuffle={shuffleCards}
+                                onShowAll={toggleView}
+                            />
+                        </div>
+                    )}
+
+                    {showList && (
+                        <FlashCardsList
+                            cards={cards}
+                            onSelectCard={(index) => {
+                                goToCard(index);
+                                setShowList(false);
+                            }}
+                            onClose={toggleView}
+                        />
+                    )}
+
+                    {cards.length === 0 && !isLoading && !error && (
+                        <div className="text-center py-12">
+                            <p className="text-muted-foreground text-sm">No flash cards available.</p>
+                        </div>
+                    )}
+                </>
+            )}
         </div>
     );
+
+    function toggleView() {
+        setShowList(!showList);
+    }
 }

@@ -8,6 +8,7 @@ import {
     TableRow,
 } from "~/components/ui/table";
 import { Button } from "~/components/ui/button";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "~/components/ui/tooltip";
 import {
     ChevronUpIcon,
     ChevronDownIcon,
@@ -70,7 +71,7 @@ export function DepEdOrdersTable({
     }
 
     return (
-        <div className="border rounded-md overflow-x-auto">
+        <div className="border rounded-md overflow-hidden">
             <Table>
                 <TableHeader>
                     <TableRow>
@@ -152,7 +153,20 @@ export function DepEdOrdersTable({
                                 <TableCell className="text-xs font-medium">{order.year}</TableCell>
                                 <TableCell className="text-xs">{order.orderNumber}</TableCell>
                                 <TableCell className="text-xs">{formatDate(order.dateIssued)}</TableCell>
-                                <TableCell className="text-xs">{order.title}</TableCell>
+                                <TableCell className="text-xs">
+                                    <TooltipProvider>
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <div className="max-w-[300px] truncate">
+                                                    {order.title}
+                                                </div>
+                                            </TooltipTrigger>
+                                            <TooltipContent side="top" className="max-w-md">
+                                                <p>{order.title}</p>
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    </TooltipProvider>
+                                </TableCell>
                                 <TableCell className="text-right">
                                     <div className="flex justify-end gap-1">
                                         <Button
