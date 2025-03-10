@@ -156,7 +156,7 @@ export function TimeImprovementChart() {
                                             if (active && payload && payload.length) {
                                                 const data = payload[0].payload;
                                                 return (
-                                                    <div className="rounded-lg border bg-background p-2 shadow-sm">
+                                                    <div className="rounded-lg border bg-background p-2 shadow-xs">
                                                         <div className="font-medium">Quiz on {data.date}</div>
                                                         <div className="mt-1 grid gap-1">
                                                             <div className="flex items-center justify-between gap-2">

@@ -52,7 +52,7 @@ export function FlashCardsList({ cards, onSelectCard, onClose }: FlashCardsListP
     });
 
     return (
-        <div className="bg-card rounded-lg border border-border/40 shadow-sm w-full mx-auto">
+        <div className="bg-card rounded-lg border border-border/40 shadow-xs w-full mx-auto">
             <div className="flex justify-between items-center p-4 border-b">
                 <h2 className="text-sm font-medium">All Flash Cards</h2>
                 <Button

@@ -185,7 +185,7 @@ export default function Home() {
         {isLoading ? (
           // Skeleton loading placeholders
           Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-48 sm:h-56 rounded-lg border bg-card p-4 sm:p-6 shadow-sm animate-pulse">
+            <div key={i} className="h-48 sm:h-56 rounded-lg border bg-card p-4 sm:p-6 shadow-xs animate-pulse">
               <div className="space-y-3 sm:space-y-4">
                 <div className="flex justify-between">
                   <div className="h-6 w-6 rounded-md bg-muted"></div>

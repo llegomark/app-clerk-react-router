@@ -55,7 +55,7 @@ export function ResultsCard({
     }
 
     return (
-        <Card className="border-border/50 shadow-sm">
+        <Card className="border-border/50 shadow-xs">
             <CardHeader className="pb-2 space-y-1.5">
                 <div className="flex flex-wrap gap-2 items-center justify-between">
                     <CardTitle className="text-lg font-bold flex items-center gap-2">

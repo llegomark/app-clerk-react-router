@@ -78,7 +78,7 @@ export function CategoryPerformanceChart({ categoryData }: CategoryPerformanceCh
                                             if (active && payload && payload.length) {
                                                 const data = payload[0].payload;
                                                 return (
-                                                    <div className="rounded-lg border bg-background p-2 shadow-sm">
+                                                    <div className="rounded-lg border bg-background p-2 shadow-xs">
                                                         <div className="font-medium">{data.categoryName}</div>
                                                         <div className="text-xs text-muted-foreground">{data.attempts} attempts</div>
                                                         <div className="mt-1 grid gap-1">

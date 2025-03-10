@@ -95,10 +95,10 @@ export function QuestionCard({
                 />
             </div>
 
-            <Card className="border-border/40 shadow-sm">
+            <Card className="border-border/40 shadow-xs">
                 {!isTimerRunning && !hasAnswered && (
                     <div className="absolute inset-0 z-10 flex items-center justify-center backdrop-blur-sm bg-background/60">
-                        <div className="text-center bg-background p-5 rounded-lg shadow-sm border max-w-xs">
+                        <div className="text-center bg-background p-5 rounded-lg shadow-xs border max-w-xs">
                             <div className="text-destructive mb-3">
                                 <ClockIcon className="h-7 w-7 mx-auto" />
                             </div>

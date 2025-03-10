@@ -76,7 +76,7 @@ export function StrengthsWeaknessesChart({ strengths }: StrengthsWeaknessesChart
                                             if (active && payload && payload.length) {
                                                 const data = payload[0].payload;
                                                 return (
-                                                    <div className="rounded-lg border bg-background p-2 shadow-sm">
+                                                    <div className="rounded-lg border bg-background p-2 shadow-xs">
                                                         <div className="font-medium">{data.category}</div>
                                                         <div className="mt-1 grid gap-1 text-sm">
                                                             <div>Proficiency: <span className="font-medium">{data.strength}%</span></div>

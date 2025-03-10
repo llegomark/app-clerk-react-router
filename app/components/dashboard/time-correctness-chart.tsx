@@ -117,7 +117,7 @@ export function TimeCorrectnessChart() {
                                             if (active && payload && payload.length) {
                                                 const data = payload[0].payload;
                                                 return (
-                                                    <div className="rounded-lg border bg-background p-2 shadow-sm">
+                                                    <div className="rounded-lg border bg-background p-2 shadow-xs">
                                                         <div className="font-medium">{data.isCorrect ? 'Correct Answer' : 'Incorrect Answer'}</div>
                                                         <div className="text-xs text-muted-foreground">{data.category}</div>
                                                         <div className="mt-1 font-medium">

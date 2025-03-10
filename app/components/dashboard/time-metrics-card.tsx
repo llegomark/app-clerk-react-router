@@ -121,7 +121,7 @@ export function TimeMetricsCard({ timeMetrics }: TimeMetricsCardProps) {
                                             const data = payload[0].payload;
                                             const percentage = ((data.value / pieData.reduce((sum, item) => sum + item.value, 0)) * 100).toFixed(1);
                                             return (
-                                                <div className="rounded-lg border bg-background p-2 shadow-sm">
+                                                <div className="rounded-lg border bg-background p-2 shadow-xs">
                                                     <div className="font-medium">{data.name}</div>
                                                     <div className="mt-1 grid gap-1">
                                                         <div className="flex items-center justify-between gap-2">

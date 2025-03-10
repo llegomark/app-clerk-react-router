@@ -101,7 +101,7 @@ export function UserProgressChart({ results, currentCategoryId }: UserProgressCh
                                         if (active && payload && payload.length) {
                                             const data = payload[0].payload;
                                             return (
-                                                <div className="rounded-lg border bg-background p-2 shadow-sm">
+                                                <div className="rounded-lg border bg-background p-2 shadow-xs">
                                                     <div className="font-medium">{data.category}</div>
                                                     <div className="text-xs text-muted-foreground">{data.date}</div>
                                                     <div className="mt-1 font-medium text-primary">

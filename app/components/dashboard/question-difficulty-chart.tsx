@@ -140,7 +140,7 @@ export function QuestionDifficultyChart() {
                                             if (active && payload && payload.length) {
                                                 const data = payload[0].payload;
                                                 return (
-                                                    <div className="rounded-lg border bg-background p-2 shadow-sm">
+                                                    <div className="rounded-lg border bg-background p-2 shadow-xs">
                                                         <div className="font-medium">Question {data.questionId}</div>
                                                         <div className="mb-1">
                                                             <Badge variant="outline" className="mt-1">{data.categoryName}</Badge>
