@@ -442,24 +442,6 @@ function ReviewAnswers({ category, userAnswers, handleBackToOverview, handleTryA
         <div className="space-y-6">
             <div className="flex justify-between items-center">
                 <h2 className="text-lg font-semibold">Review Your Answers</h2>
-                <div className="flex gap-2">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleBackToOverview}
-                        className="cursor-pointer gap-1"
-                    >
-                        <BarChart4Icon className="size-3.5" />
-                        <span>Back to Overview</span>
-                    </Button>
-                    <Button
-                        size="sm"
-                        onClick={handleTryAgain}
-                        className="cursor-pointer"
-                    >
-                        Try Again
-                    </Button>
-                </div>
             </div>
 
             <div className="space-y-4">

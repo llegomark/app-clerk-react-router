@@ -6,8 +6,8 @@ import { toast } from 'sonner';
 
 import type { Route } from "./+types/quiz";
 import { useQuizStore } from '~/lib/store';
-import { QuestionCard } from '~/components/question-card';
 import { QuizHeader } from '~/components/quiz-header';
+import { QuestionCard } from '~/components/question-card';
 import { saveQuizResult, logDebug, logError } from '~/lib/supabase';
 import { ProtectedRoute } from '~/components/protected-route';
 
@@ -144,12 +144,8 @@ function ReviewerContent() {
     };
 
     return (
-        <div className="min-h-[calc(100vh-10rem)] bg-background py-6 px-4">
-            <QuizHeader
-                title={currentCategory.name}
-                onExit={handleBackToCategories}
-            />
-
+        <div className="min-h-[calc(100vh-10rem)] bg-background py-10 px-4">
+            <QuizHeader title={currentCategory.name} />
             <QuestionCard
                 question={currentQuestion}
                 questionNumber={currentQuestionIndex + 1}
@@ -161,6 +157,7 @@ function ReviewerContent() {
                 onAnswer={handleAnswerQuestion}
                 onTimeUp={handleTimeUp}
                 onNext={handleNextQuestion}
+                onExit={handleBackToCategories}
             />
         </div>
     );

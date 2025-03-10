@@ -8,6 +8,17 @@ import { Timer } from './timer';
 import { Progress } from '~/components/ui/progress';
 import { Separator } from '~/components/ui/separator';
 import { toast } from 'sonner';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger
+} from '~/components/ui/alert-dialog';
 import type { Question, ShuffledQuestion, UserAnswer } from '~/types';
 
 interface QuestionCardProps {
@@ -21,6 +32,7 @@ interface QuestionCardProps {
     onAnswer: (selectedOption: number, timeRemaining: number) => void;  // Updated to include timeRemaining
     onTimeUp: () => void;
     onNext: () => void;
+    onExit?: () => void; // Added exit prop
 }
 
 export function QuestionCard({
@@ -34,6 +46,7 @@ export function QuestionCard({
     onAnswer,
     onTimeUp,
     onNext,
+    onExit,
 }: QuestionCardProps) {
     const hasAnswered = userAnswer !== undefined;
     const [currentTimeRemaining, setCurrentTimeRemaining] = useState(120); // Track current time remaining
@@ -54,11 +67,11 @@ export function QuestionCard({
     };
 
     return (
-        <div className="max-w-2xl mx-auto space-y-4">
+        <div className="max-w-2xl mx-auto space-y-6">
             {/* Progress indicator */}
-            <div className="space-y-2 px-1 mb-4">
+            <div className="space-y-2 px-1 mb-6">
                 <div className="flex items-center justify-between">
-                    <div className="text-xs text-muted-foreground">
+                    <div className="text-xs font-medium">
                         Question {questionNumber} of {totalQuestions}
                     </div>
                     <Timer
@@ -72,7 +85,7 @@ export function QuestionCard({
                 <Progress
                     value={(currentTimeRemaining / 120) * 100}
                     className={cn(
-                        "h-2",
+                        "h-2.5",
                         currentTimeRemaining <= 10
                             ? "bg-background [&>div]:bg-destructive"
                             : currentTimeRemaining <= 30
@@ -98,16 +111,16 @@ export function QuestionCard({
                     </div>
                 )}
 
-                <CardContent className="p-5">
+                <CardContent className="p-6">
                     {/* Question text */}
-                    <div className="mb-6">
-                        <h2 className="text-base font-medium leading-relaxed text-foreground flex-1">
+                    <div className="mb-8">
+                        <h2 className="text-lg font-medium leading-relaxed">
                             {question.question}
                         </h2>
                     </div>
 
-                    {/* Options - no indicators */}
-                    <div className="space-y-2.5">
+                    {/* Options - improved styling */}
+                    <div className="space-y-4">
                         {question.options.map((option, index) => {
                             // Check if we're dealing with a shuffled question
                             const isCorrectOption = 'optionIndexMap' in question ?
@@ -123,17 +136,18 @@ export function QuestionCard({
                                     key={index}
                                     variant="outline"
                                     className={cn(
-                                        "w-full justify-start text-left px-4 py-3 h-auto text-sm font-normal break-words whitespace-normal",
-                                        "border shadow-xs transition-colors",
+                                        "w-full justify-start text-left px-5 py-4 h-auto text-sm font-normal break-words whitespace-normal text-foreground",
+                                        "border-2 shadow-xs transition-all",
                                         // Interactive states (when not answered)
-                                        !hasAnswered && "cursor-pointer hover:border-primary/50 hover:text-foreground hover:bg-accent/50 focus-visible:border-primary",
-                                        // Correct answer styling
-                                        isCorrectAnswer && "border-success/70 bg-success/10 text-foreground",
-                                        // Incorrect selection styling
-                                        isIncorrectAnswer && "border-destructive/70 bg-destructive/10 text-foreground"
+                                        !hasAnswered && "cursor-pointer hover:border-primary/50 hover:bg-accent/50",
+                                        // Correct answer styling - only change border color, not text
+                                        isCorrectAnswer && "border-success",
+                                        // Incorrect selection styling - only change border color, not text
+                                        isIncorrectAnswer && "border-destructive"
                                     )}
                                     onClick={() => handleOptionClick(index)}
                                     disabled={hasAnswered || !isTimerRunning}
+                                    style={{ color: 'var(--color-foreground)' }} // Force text color to remain unchanged
                                 >
                                     <div className="flex items-start gap-2">
                                         <span>{option}</span>
@@ -147,24 +161,24 @@ export function QuestionCard({
                 {hasAnswered && (
                     <>
                         <Separator />
-                        <CardContent className="pt-4 pb-4 px-5 bg-accent/40">
-                            <div className="space-y-3">
-                                <div className="flex gap-2.5 p-3 bg-background rounded-md border border-border/50">
-                                    <InfoIcon className="size-4 text-primary shrink-0 mt-0.5" />
+                        <CardContent className="pt-5 pb-5 px-6">
+                            <div className="space-y-4">
+                                <div className="flex gap-3 p-4 rounded-md border border-border">
+                                    <InfoIcon className="size-5 text-primary shrink-0 mt-0.5" />
                                     <div>
-                                        <h3 className="font-medium mb-1 text-xs">Explanation</h3>
-                                        <p className="text-muted-foreground text-xs break-words">
+                                        <h3 className="font-medium mb-2 text-sm">Explanation</h3>
+                                        <p className="text-foreground text-sm break-words">
                                             {question.explanation}
                                         </p>
                                     </div>
                                 </div>
 
                                 {question.reference && (
-                                    <div className="flex gap-2.5 p-3 bg-background rounded-md border border-border/50">
-                                        <BookOpenIcon className="size-4 text-primary shrink-0 mt-0.5" />
+                                    <div className="flex gap-3 p-4 rounded-md border border-border">
+                                        <BookOpenIcon className="size-5 text-primary shrink-0 mt-0.5" />
                                         <div>
-                                            <h3 className="font-medium mb-1 text-xs">Reference</h3>
-                                            <p className="text-xs text-muted-foreground break-words">
+                                            <h3 className="font-medium mb-2 text-sm">Reference</h3>
+                                            <p className="text-sm text-foreground break-words">
                                                 {question.reference.title}
                                                 {question.reference.url && (
                                                     <a
@@ -188,15 +202,48 @@ export function QuestionCard({
                             </div>
                         </CardContent>
 
-                        <CardFooter className="flex justify-end py-3 px-5 bg-accent/20">
-                            <Button
-                                size="sm"
-                                onClick={onNext}
-                                className="gap-1.5 cursor-pointer"
-                            >
-                                {questionNumber === totalQuestions ? "See Results" : "Next Question"}
-                                <ArrowRightIcon className="size-3.5" />
-                            </Button>
+                        <CardFooter className="flex justify-between py-4 px-6">
+                            {onExit && (
+                                <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="cursor-pointer gap-1.5"
+                                        >
+                                            Exit Quiz
+                                        </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                            <AlertDialogTitle>Exit Review?</AlertDialogTitle>
+                                            <AlertDialogDescription>
+                                                Your progress will be lost.
+                                            </AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                            <AlertDialogCancel className="cursor-pointer">Cancel</AlertDialogCancel>
+                                            <Button
+                                                variant="destructive"
+                                                onClick={onExit}
+                                                className="cursor-pointer"
+                                            >
+                                                Exit
+                                            </Button>
+                                        </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                </AlertDialog>
+                            )}
+                            <div className="ml-auto">
+                                <Button
+                                    size="sm"
+                                    onClick={onNext}
+                                    className="gap-1.5 cursor-pointer"
+                                >
+                                    {questionNumber === totalQuestions ? "See Results" : "Next Question"}
+                                    <ArrowRightIcon className="size-3.5" />
+                                </Button>
+                            </div>
                         </CardFooter>
                     </>
                 )}
