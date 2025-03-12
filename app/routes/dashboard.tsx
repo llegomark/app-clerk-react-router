@@ -1,5 +1,5 @@
 // app/routes/dashboard.tsx
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useUser } from '@clerk/react-router';
 import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '~/components/ui/tabs';
@@ -8,8 +8,7 @@ import { Button } from '~/components/ui/button';
 import { BarChart4Icon, RefreshCwIcon } from 'lucide-react';
 
 import { ProtectedRoute } from '~/components/protected-route';
-import type { RecentQuizResult } from '~/types';
-import { getRecentQuizResults } from '~/lib/supabase';
+import { useDashboardData } from '~/hooks/use-dashboard-queries';
 
 // Import dashboard components
 import { StatsCards } from '~/components/dashboard/stats-cards';
@@ -22,7 +21,6 @@ import { CategoryTimingChart } from '~/components/dashboard/category-timing-char
 import { TimeImprovementChart } from '~/components/dashboard/time-improvement-chart';
 import { CategoryImprovementChart } from '~/components/dashboard/category-improvement-chart';
 import { QuestionDifficultyChart } from '~/components/dashboard/question-difficulty-chart';
-import { getCategoryPerformance, getTimeMetrics } from '~/lib/supabase-dashboard';
 
 export function meta() {
     return [
@@ -41,102 +39,23 @@ export default function Dashboard() {
 
 function DashboardContent() {
     const { user } = useUser();
-    const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-
-    // State for each data type
-    const [quizResults, setQuizResults] = useState<RecentQuizResult[]>([]);
-    const [categoryPerformance, setCategoryPerformance] = useState<any[]>([]);
-    const [timeMetrics, setTimeMetrics] = useState({
-        averageTimeRemaining: 0,
-        fastestAnswer: 0,
-        slowestAnswer: 0,
-        timeDistribution: [] as { bucket: string, count: number }[]
-    });
-    const [strengthsData, setStrengthsData] = useState<any[]>([]);
-    const [dashboardStats, setDashboardStats] = useState({
-        totalQuizzes: 0,
-        totalQuestions: 0,
-        bestScore: 0,
-        averageScore: 0,
-        bestCategory: ''
-    });
+    const {
+        recentResults,
+        categoryPerformance,
+        timeMetrics,
+        dashboardStats,
+        strengthsData,
+        isPending,
+        error,
+        refetch
+    } = useDashboardData(user?.id || '');
 
     // Tab state
     const [activeTab, setActiveTab] = useState("overview");
 
-    // Fetch dashboard data
-    const fetchDashboardData = async () => {
-        if (!user) return;
-
-        try {
-            setIsLoading(true);
-            setError(null);
-
-            // Fetch quiz results
-            const { results, totalCount } = await getRecentQuizResults(user.id, 50);
-            setQuizResults(results);
-
-            // Fetch category performance
-            const categoryData = await getCategoryPerformance(user.id);
-            setCategoryPerformance(categoryData);
-
-            // Fetch time metrics
-            const timeData = await getTimeMetrics(user.id);
-            setTimeMetrics(timeData);
-
-            // Calculate strengths and weaknesses from category data
-            const strengths = categoryData.map(category => ({
-                category: category.categoryName,
-                strength: category.overallPercentage,
-                correctAnswers: category.totalCorrect,
-                totalAnswers: category.totalQuestions
-            }));
-            setStrengthsData(strengths);
-
-            // Calculate summary stats
-            let totalScore = 0;
-            let bestScore = 0;
-            let bestCategoryName = '';
-
-            categoryData.forEach(category => {
-                if (category.overallPercentage > bestScore) {
-                    bestScore = category.overallPercentage;
-                    bestCategoryName = category.categoryName;
-                }
-            });
-
-            results.forEach(result => {
-                totalScore += (result.score / result.totalQuestions) * 100;
-            });
-
-            const totalQuestions = categoryData.reduce((sum, cat) => sum + cat.totalQuestions, 0);
-
-            setDashboardStats({
-                totalQuizzes: totalCount || 0,
-                totalQuestions,
-                bestScore,
-                averageScore: results.length > 0 ? totalScore / results.length : 0,
-                bestCategory: bestCategoryName || 'None yet'
-            });
-
-        } catch (err) {
-            console.error('Error fetching dashboard data:', err);
-            setError('Failed to load dashboard data');
-            toast.error('Failed to load dashboard data');
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    // Load data on mount
-    useEffect(() => {
-        fetchDashboardData();
-    }, [user]);
-
     // Handle refresh
     const handleRefresh = () => {
-        fetchDashboardData();
+        refetch();
         toast.success('Dashboard refreshed');
     };
 
@@ -158,14 +77,14 @@ function DashboardContent() {
                     size="sm"
                     onClick={handleRefresh}
                     className="gap-1.5 cursor-pointer"
-                    disabled={isLoading}
+                    disabled={isPending}
                 >
                     <RefreshCwIcon className="h-4 w-4" />
                     <span>Refresh</span>
                 </Button>
             </div>
 
-            {isLoading ? (
+            {isPending ? (
                 <div className="flex flex-col items-center justify-center py-12">
                     <div className="h-6 w-6 rounded-full border-2 border-primary border-t-transparent animate-spin mb-2"></div>
                     <p className="text-sm text-muted-foreground">Loading your dashboard...</p>
@@ -184,7 +103,7 @@ function DashboardContent() {
                         </Button>
                     </CardContent>
                 </Card>
-            ) : quizResults.length === 0 ? (
+            ) : recentResults.length === 0 ? (
                 <Card>
                     <CardContent className="p-6 text-center">
                         <BarChart4Icon className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
@@ -217,7 +136,7 @@ function DashboardContent() {
                         </TabsList>
 
                         <TabsContent value="overview" className="space-y-6 mt-6">
-                            <OverallProgressChart quizResults={quizResults} />
+                            <OverallProgressChart quizResults={recentResults} />
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <CategoryPerformanceChart categoryData={categoryPerformance} />
                                 <StrengthsWeaknessesChart strengths={strengthsData} />

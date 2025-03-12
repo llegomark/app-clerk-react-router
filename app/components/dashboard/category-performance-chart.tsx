@@ -1,5 +1,5 @@
 // app/components/dashboard/category-performance-chart.tsx
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '~/components/ui/card';
 import { ChartContainer } from '~/components/ui/chart';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, LabelList } from 'recharts';
 

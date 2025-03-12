@@ -2,10 +2,10 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/components/ui/card';
 import { ChartContainer } from '~/components/ui/chart';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Cell } from 'recharts';
-import { getDetailedQuizAnswers } from '~/lib/supabase-dashboard';
-import { useEffect, useState } from 'react';
-import { useUser } from '@clerk/react-router';
 import { Badge } from '~/components/ui/badge';
+import { useUser } from '@clerk/react-router';
+import { useDetailedQuizAnswers } from '~/hooks/use-dashboard-queries';
+import { useState, useEffect } from 'react';
 
 interface QuestionData {
     questionId: number;
@@ -17,65 +17,51 @@ interface QuestionData {
 
 export function QuestionDifficultyChart() {
     const { user } = useUser();
-    const [data, setData] = useState<QuestionData[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+    const { data: answers, isPending } = useDetailedQuizAnswers(user?.id || '');
+    const [questionData, setQuestionData] = useState<QuestionData[]>([]);
 
     useEffect(() => {
-        async function fetchData() {
-            if (!user) return;
+        if (!answers) return;
 
-            setIsLoading(true);
-            try {
-                // Get detailed answer data
-                const answers = await getDetailedQuizAnswers(user.id);
+        // Group by question ID
+        const questionMap = new Map<number, {
+            questionId: number;
+            correctCount: number;
+            totalCount: number;
+            categoryName: string;
+        }>();
 
-                // Group by question ID
-                const questionMap = new Map<number, {
-                    questionId: number;
-                    correctCount: number;
-                    totalCount: number;
-                    categoryName: string;
-                }>();
+        answers.forEach(answer => {
+            const questionId = answer.questionId;
 
-                answers.forEach(answer => {
-                    const questionId = answer.questionId;
-
-                    if (!questionMap.has(questionId)) {
-                        questionMap.set(questionId, {
-                            questionId,
-                            correctCount: 0,
-                            totalCount: 0,
-                            categoryName: answer.categoryName
-                        });
-                    }
-
-                    const question = questionMap.get(questionId)!;
-                    question.totalCount += 1;
-                    if (answer.isCorrect) {
-                        question.correctCount += 1;
-                    }
+            if (!questionMap.has(questionId)) {
+                questionMap.set(questionId, {
+                    questionId,
+                    correctCount: 0,
+                    totalCount: 0,
+                    categoryName: answer.categoryName
                 });
-
-                // Calculate success rate for each question
-                const questionData = Array.from(questionMap.values())
-                    .filter(q => q.totalCount >= 2) // Only include questions attempted multiple times
-                    .map(q => ({
-                        ...q,
-                        successRate: (q.correctCount / q.totalCount) * 100
-                    }))
-                    .sort((a, b) => a.successRate - b.successRate) // Sort by success rate ascending
-                    .slice(0, 10); // Get top 10 most difficult questions
-
-                setData(questionData);
-            } catch (err) {
-                console.error('Error fetching question difficulty data:', err);
-            } finally {
-                setIsLoading(false);
             }
-        }
 
-        fetchData();
-    }, [user]);
+            const question = questionMap.get(questionId)!;
+            question.totalCount += 1;
+            if (answer.isCorrect) {
+                question.correctCount += 1;
+            }
+        });
+
+        // Calculate success rate for each question
+        const processedData = Array.from(questionMap.values())
+            .filter(q => q.totalCount >= 2) // Only include questions attempted multiple times
+            .map(q => ({
+                ...q,
+                successRate: (q.correctCount / q.totalCount) * 100
+            }))
+            .sort((a, b) => a.successRate - b.successRate) // Sort by success rate ascending
+            .slice(0, 10); // Get top 10 most difficult questions
+
+        setQuestionData(processedData);
+    }, [answers]);
 
     // Chart configuration
     const chartConfig = {
@@ -102,15 +88,15 @@ export function QuestionDifficultyChart() {
             </CardHeader>
             <CardContent>
                 <div className="h-80">
-                    {isLoading ? (
+                    {isPending ? (
                         <div className="flex h-full items-center justify-center">
                             <div className="h-6 w-6 rounded-full border-2 border-primary border-t-transparent animate-spin"></div>
                         </div>
-                    ) : data.length > 0 ? (
+                    ) : questionData.length > 0 ? (
                         <ChartContainer config={chartConfig} className="h-full w-full">
                             <ResponsiveContainer width="100%" height="100%">
                                 <BarChart
-                                    data={data}
+                                    data={questionData}
                                     margin={{ top: 20, right: 20, left: 20, bottom: 20 }}
                                     layout="vertical"
                                 >
@@ -171,7 +157,7 @@ export function QuestionDifficultyChart() {
                                             formatter: (value: number) => `${value.toFixed(0)}%`
                                         }}
                                     >
-                                        {data.map((entry, index) => (
+                                        {questionData.map((entry, index) => (
                                             <Cell key={`cell-${index}`} fill={getBarColor(entry.successRate)} />
                                         ))}
                                     </Bar>

@@ -17,6 +17,19 @@ import type { Route } from "./+types/root";
 import { Footer } from '~/components/footer';
 import stylesheet from "./app.css?url";
 import { ModeToggle } from "./components/mode-toggle";
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+
+// Create a client
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      refetchOnWindowFocus: true,
+      retry: 1,
+    },
+  },
+});
 
 export async function loader(args: Route.LoaderArgs) {
   return rootAuthLoader(args)
@@ -59,38 +72,40 @@ export default function App({ loaderData }: Route.ComponentProps) {
   const navigate = useNavigate();
 
   return (
-
     <ClerkProvider loaderData={loaderData}>
-      <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-        <header className="bg-background border-b py-3">
-          <div className="container mx-auto flex items-center justify-between px-4 max-w-4xl">
-            <div
-              className="flex items-center gap-2 cursor-pointer"
-              onClick={() => navigate('/')}
-            >
-              <BookOpenIcon className="size-5 text-primary" />
-              <span className="font-bold text-lg">NQESH Reviewer Pro</span>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+          <header className="bg-background border-b py-3">
+            <div className="container mx-auto flex items-center justify-between px-4 max-w-4xl">
+              <div
+                className="flex items-center gap-2 cursor-pointer"
+                onClick={() => navigate('/')}
+              >
+                <BookOpenIcon className="size-5 text-primary" />
+                <span className="font-bold text-lg">NQESH Reviewer Pro</span>
+              </div>
+              <div className="flex items-center gap-4">
+                <SignedOut>
+                  <SignInButton mode="modal">
+                    <button className="bg-primary text-primary-foreground rounded-md px-4 py-1.5 text-sm font-medium cursor-pointer hover:bg-primary/90">
+                      Sign In
+                    </button>
+                  </SignInButton>
+                </SignedOut>
+                <SignedIn>
+                  <UserButton />
+                </SignedIn>
+                <ModeToggle />
+              </div>
             </div>
-            <div className="flex items-center gap-4">
-              <SignedOut>
-                <SignInButton mode="modal">
-                  <button className="bg-primary text-primary-foreground rounded-md px-4 py-1.5 text-sm font-medium cursor-pointer hover:bg-primary/90">
-                    Sign In
-                  </button>
-                </SignInButton>
-              </SignedOut>
-              <SignedIn>
-                <UserButton />
-              </SignedIn>
-              <ModeToggle />
-            </div>
-          </div>
-        </header>
-        <main className="min-h-[calc(100vh-10rem)] bg-background">
-          <Outlet />
-        </main>
-        <Footer />
-      </ThemeProvider>
+          </header>
+          <main className="min-h-[calc(100vh-10rem)] bg-background">
+            <Outlet />
+          </main>
+          <Footer />
+          {process.env.NODE_ENV !== 'production' && <ReactQueryDevtools initialIsOpen={false} />}
+        </ThemeProvider>
+      </QueryClientProvider>
     </ClerkProvider>
   );
 }
