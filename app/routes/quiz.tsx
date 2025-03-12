@@ -1,5 +1,5 @@
-// app/routes/quiz.tsx
-import { useEffect } from 'react';
+// app/routes/quiz.tsx - fixed version
+import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router';
 import { useUser } from '@clerk/react-router';
 import { toast } from 'sonner';
@@ -8,8 +8,9 @@ import type { Route } from "./+types/quiz";
 import { useQuizStore } from '~/lib/store';
 import { QuizHeader } from '~/components/quiz-header';
 import { QuestionCard } from '~/components/question-card';
-import { saveQuizResult, logDebug, logError } from '~/lib/supabase';
+import { logDebug, logError } from '~/lib/supabase';
 import { ProtectedRoute } from '~/components/protected-route';
+import { useSaveQuizResult } from '~/hooks/use-quiz-mutations';
 
 export function meta({ }: Route.MetaArgs) {
     return [
@@ -29,6 +30,8 @@ export default function Reviewer() {
 function ReviewerContent() {
     const navigate = useNavigate();
     const { user } = useUser();
+    const saveQuizResultMutation = useSaveQuizResult();
+    const resultsSaved = useRef(false);
 
     const {
         currentCategory,
@@ -53,10 +56,13 @@ function ReviewerContent() {
             return;
         }
 
-        // If quiz is complete, save results and redirect to results page
-        if (isQuizComplete && currentCategory) {
+        // If quiz is complete and results haven't been saved yet, save them
+        if (isQuizComplete && currentCategory && !resultsSaved.current) {
             const saveResults = async () => {
                 try {
+                    // Set flag to prevent multiple saves
+                    resultsSaved.current = true;
+
                     logDebug('Review completed, preparing to save results', {
                         categoryId: currentCategory.id,
                         score: getScore(),
@@ -72,29 +78,63 @@ function ReviewerContent() {
                         completedAt: new Date()
                     };
 
-                    // Save quiz results to Supabase
-                    const userId = user?.id || '';
-                    const result = await saveQuizResult(userId, resultData);
-
-                    if (result.success) {
-                        // Remove success toast, only log the success
-                        logDebug('Results saved successfully');
-                    } else {
-                        logError('Failed to save results', result.error);
+                    if (!user?.id) {
+                        console.error('User ID is missing, cannot save results');
                         toast.error('Could not save results, but you can still see your score');
+                        // Store results in session storage for viewing
+                        sessionStorage.setItem('lastQuizResult', JSON.stringify(resultData));
+                        navigate('/results', { replace: true });
+                        return;
                     }
+
+                    // Use mutation to save quiz results with TanStack Query
+                    await saveQuizResultMutation.mutateAsync(
+                        {
+                            userId: user.id,
+                            resultData
+                        }
+                    );
+
+                    // Store results in session storage for the results page
+                    sessionStorage.setItem('lastQuizResult', JSON.stringify(resultData));
+
+                    // Navigate using a timeout to prevent routing race conditions
+                    setTimeout(() => {
+                        navigate('/results', { replace: true });
+                    }, 100);
+
                 } catch (error) {
                     logError('Error in saveResults function', error);
                     toast.error('Could not save results, but you can still see your score');
-                } finally {
-                    // Navigate to results page regardless of save success
-                    navigate('/results', { replace: true });
+
+                    // Store results in session storage for viewing
+                    if (currentCategory) {
+                        sessionStorage.setItem('lastQuizResult', JSON.stringify({
+                            categoryId: currentCategory.id,
+                            answers: userAnswers,
+                            score: getScore(),
+                            totalQuestions: currentCategory.questions.length,
+                            completedAt: new Date()
+                        }));
+                    }
+
+                    setTimeout(() => {
+                        navigate('/results', { replace: true });
+                    }, 100);
                 }
             };
 
             saveResults();
         }
-    }, [currentCategory, isQuizComplete, navigate, user, userAnswers, getScore]);
+    }, [currentCategory, isQuizComplete, navigate, user, userAnswers, getScore, saveQuizResultMutation]);
+
+    // Cleanup effect for when component unmounts
+    useEffect(() => {
+        return () => {
+            // Reset saved flag when component unmounts
+            resultsSaved.current = false;
+        };
+    }, []);
 
     if (!currentCategory) {
         return null; // Redirect is handled in useEffect
@@ -104,7 +144,11 @@ function ReviewerContent() {
     const userAnswer = getUserAnswerForCurrentQuestion();
 
     if (!currentQuestion) {
-        completeQuiz();
+        // Only complete quiz if it's not already complete
+        if (!isQuizComplete) {
+            completeQuiz();
+        }
+
         return (
             <div className="container mx-auto py-8 px-4 flex flex-col items-center justify-center">
                 <div className="h-5 w-5 rounded-full border-2 border-primary border-t-transparent animate-spin"></div>
