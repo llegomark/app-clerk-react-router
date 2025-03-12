@@ -74,7 +74,7 @@ export default function App({ loaderData }: Route.ComponentProps) {
   return (
     <ClerkProvider loaderData={loaderData}>
       <QueryClientProvider client={queryClient}>
-        <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+        <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
           <header className="bg-background border-b py-3">
             <div className="container mx-auto flex items-center justify-between px-4 max-w-4xl">
               <div

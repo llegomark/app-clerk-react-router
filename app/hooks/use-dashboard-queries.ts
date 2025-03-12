@@ -1,8 +1,7 @@
 // app/hooks/use-dashboard-queries.ts
 import { useQuery } from '@tanstack/react-query';
 import { getCategoryPerformance, getTimeMetrics, getDetailedQuizAnswers } from '~/lib/supabase-dashboard';
-import { getRecentQuizResults } from '~/lib/supabase'; // Import from the correct file
-import type { RecentQuizResult } from '~/types';
+import { getRecentQuizResults } from '~/lib/supabase';
 
 // Hook for fetching recent quiz results
 export function useRecentQuizResults(userId: string) {
