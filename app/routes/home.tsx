@@ -1,4 +1,4 @@
-// app/routes/home.tsx
+// app/routes/home.tsx - modify to add prefetching
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { useUser } from '@clerk/react-router';
@@ -7,11 +7,12 @@ import { FolderIcon, GraduationCapIcon, BookOpenIcon, BarChart4Icon } from 'luci
 
 import type { Route } from "./+types/home";
 import { CategoryCard } from '~/components/category-card';
-import { useCategories } from '~/hooks/use-categories';
+import { useCategories, categoryWithQuestionsOptions } from '~/hooks/use-categories';
 import { useQuizStore } from '~/lib/store';
 import { Button } from '~/components/ui/button';
 import { Card, CardContent } from '~/components/ui/card';
 import { getCategoryWithQuestions, logDebug } from '~/lib/supabase';
+import { useQueryClient } from '@tanstack/react-query';
 
 export function meta({ }: Route.MetaArgs) {
   return [
@@ -21,8 +22,8 @@ export function meta({ }: Route.MetaArgs) {
 }
 
 export default function Home() {
-  const { user, isSignedIn } = useUser();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const {
     startQuiz,
@@ -82,6 +83,11 @@ export default function Home() {
     } finally {
       setLoadingCategoryId(null);
     }
+  };
+
+  // Prefetch category data on hover
+  const handleCategoryHover = (categoryId: number) => {
+    queryClient.prefetchQuery(categoryWithQuestionsOptions(categoryId));
   };
 
   // Render study tools skeleton loading UI
@@ -231,7 +237,8 @@ export default function Home() {
             <CategoryCard
               key={category.id}
               category={category}
-              onSelect={handleSelectCategory}  // This should directly call our handler
+              onSelect={handleSelectCategory}
+              onHover={handleCategoryHover} // Add hover handler for prefetching
               isLoading={loadingCategoryId === category.id}
             />
           ))

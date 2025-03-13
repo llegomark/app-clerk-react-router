@@ -1,5 +1,5 @@
 // app/routes/dashboard.tsx
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { useUser } from '@clerk/react-router';
 import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '~/components/ui/tabs';
@@ -9,8 +9,10 @@ import { BarChart4Icon, RefreshCwIcon } from 'lucide-react';
 
 import { ProtectedRoute } from '~/components/protected-route';
 import { useDashboardData } from '~/hooks/use-dashboard-queries';
+import { useSuspenseQuery } from '@tanstack/react-query';
+import { categoryPerformanceOptions } from '~/hooks/use-dashboard-queries';
 
-// Import dashboard components
+// Import dashboard components normally since they don't use default exports
 import { StatsCards } from '~/components/dashboard/stats-cards';
 import { OverallProgressChart } from '~/components/dashboard/overall-progress-chart';
 import { CategoryPerformanceChart } from '~/components/dashboard/category-performance-chart';
@@ -35,6 +37,14 @@ export default function Dashboard() {
             <DashboardContent />
         </ProtectedRoute>
     );
+}
+
+// Wrapper for Suspense components
+function SuspensePerformanceData({ userId }: { userId: string }) {
+    // Use suspenseQuery for category performance - this will suspend until data is ready
+    const { data } = useSuspenseQuery(categoryPerformanceOptions(userId));
+
+    return <CategoryPerformanceChart categoryData={data || []} />;
 }
 
 function DashboardContent() {
@@ -136,26 +146,71 @@ function DashboardContent() {
                         </TabsList>
 
                         <TabsContent value="overview" className="space-y-6 mt-6">
-                            <OverallProgressChart quizResults={recentResults} />
+                            <Suspense fallback={<div className="h-80 flex items-center justify-center">
+                                <div className="h-6 w-6 rounded-full border-2 border-primary border-t-transparent animate-spin"></div>
+                            </div>}>
+                                <OverallProgressChart quizResults={recentResults} />
+                            </Suspense>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <CategoryPerformanceChart categoryData={categoryPerformance} />
-                                <StrengthsWeaknessesChart strengths={strengthsData} />
+                                {/* Use Suspense for CategoryPerformanceChart */}
+                                <Suspense fallback={<div className="h-80 flex items-center justify-center">
+                                    <div className="h-6 w-6 rounded-full border-2 border-primary border-t-transparent animate-spin"></div>
+                                </div>}>
+                                    {user?.id && <SuspensePerformanceData userId={user.id} />}
+                                </Suspense>
+                                <Suspense fallback={<div className="h-80 flex items-center justify-center">
+                                    <div className="h-6 w-6 rounded-full border-2 border-primary border-t-transparent animate-spin"></div>
+                                </div>}>
+                                    <StrengthsWeaknessesChart strengths={strengthsData} />
+                                </Suspense>
                             </div>
-                            <QuestionDifficultyChart />
+                            <Suspense fallback={<div className="h-80 flex items-center justify-center">
+                                <div className="h-6 w-6 rounded-full border-2 border-primary border-t-transparent animate-spin"></div>
+                            </div>}>
+                                <QuestionDifficultyChart />
+                            </Suspense>
                         </TabsContent>
 
                         <TabsContent value="categories" className="space-y-6 mt-6">
-                            <CategoryPerformanceChart categoryData={categoryPerformance} />
-                            <StrengthsWeaknessesChart strengths={strengthsData} />
-                            <CategoryImprovementChart />
+                            <Suspense fallback={<div className="h-80 flex items-center justify-center">
+                                <div className="h-6 w-6 rounded-full border-2 border-primary border-t-transparent animate-spin"></div>
+                            </div>}>
+                                <CategoryPerformanceChart categoryData={categoryPerformance} />
+                            </Suspense>
+                            <Suspense fallback={<div className="h-80 flex items-center justify-center">
+                                <div className="h-6 w-6 rounded-full border-2 border-primary border-t-transparent animate-spin"></div>
+                            </div>}>
+                                <StrengthsWeaknessesChart strengths={strengthsData} />
+                            </Suspense>
+                            <Suspense fallback={<div className="h-80 flex items-center justify-center">
+                                <div className="h-6 w-6 rounded-full border-2 border-primary border-t-transparent animate-spin"></div>
+                            </div>}>
+                                <CategoryImprovementChart />
+                            </Suspense>
                         </TabsContent>
 
                         <TabsContent value="timing" className="space-y-6 mt-6">
-                            <TimeMetricsCard timeMetrics={timeMetrics} />
-                            <TimeCorrectnessChart />
+                            <Suspense fallback={<div className="h-80 flex items-center justify-center">
+                                <div className="h-6 w-6 rounded-full border-2 border-primary border-t-transparent animate-spin"></div>
+                            </div>}>
+                                <TimeMetricsCard timeMetrics={timeMetrics} />
+                            </Suspense>
+                            <Suspense fallback={<div className="h-80 flex items-center justify-center">
+                                <div className="h-6 w-6 rounded-full border-2 border-primary border-t-transparent animate-spin"></div>
+                            </div>}>
+                                <TimeCorrectnessChart />
+                            </Suspense>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <CategoryTimingChart />
-                                <TimeImprovementChart />
+                                <Suspense fallback={<div className="h-80 flex items-center justify-center">
+                                    <div className="h-6 w-6 rounded-full border-2 border-primary border-t-transparent animate-spin"></div>
+                                </div>}>
+                                    <CategoryTimingChart />
+                                </Suspense>
+                                <Suspense fallback={<div className="h-80 flex items-center justify-center">
+                                    <div className="h-6 w-6 rounded-full border-2 border-primary border-t-transparent animate-spin"></div>
+                                </div>}>
+                                    <TimeImprovementChart />
+                                </Suspense>
                             </div>
                         </TabsContent>
                     </Tabs>

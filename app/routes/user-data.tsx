@@ -1,5 +1,5 @@
 // app/routes/user-data.tsx
-import { useState, useEffect, Fragment } from 'react';
+import { useState, useEffect } from 'react';
 import { useUser } from '@clerk/react-router';
 import { format } from 'date-fns';
 import { Button } from '~/components/ui/button';
@@ -21,7 +21,7 @@ import { toast } from 'sonner';
 import { ProtectedRoute } from '~/components/protected-route';
 import { useSupabase } from '~/lib/supabase-clerk';
 import type { Database } from '~/lib/supabase-types';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '~/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '~/components/ui/tabs';
 import { Badge } from '~/components/ui/badge';
 
 export function meta() {

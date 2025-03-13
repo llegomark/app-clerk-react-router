@@ -1,12 +1,13 @@
 // app/hooks/use-dashboard-queries.ts
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, queryOptions } from '@tanstack/react-query';
 import { getCategoryPerformance, getTimeMetrics, getDetailedQuizAnswers } from '~/lib/supabase-dashboard';
 import { getRecentQuizResults } from '~/lib/supabase';
+import { queryKeys } from '~/lib/query-keys';
 
-// Hook for fetching recent quiz results
-export function useRecentQuizResults(userId: string) {
-    return useQuery({
-        queryKey: ['recentQuizResults', userId],
+// Hook for fetching recent quiz results with queryOptions helper
+export const recentQuizResultsOptions = (userId: string) =>
+    queryOptions({
+        queryKey: queryKeys.quizResults.recent(userId),
         queryFn: async () => {
             const { results, totalCount } = await getRecentQuizResults(userId, 50);
             return { results, totalCount };
@@ -14,36 +15,48 @@ export function useRecentQuizResults(userId: string) {
         enabled: !!userId,
         staleTime: 1000 * 60 * 2, // 2 minutes
     });
+
+export function useRecentQuizResults(userId: string) {
+    return useQuery(recentQuizResultsOptions(userId));
 }
 
 // Hook for fetching category performance data
-export function useCategoryPerformance(userId: string) {
-    return useQuery({
-        queryKey: ['categoryPerformance', userId],
+export const categoryPerformanceOptions = (userId: string) =>
+    queryOptions({
+        queryKey: queryKeys.dashboard.categoryPerformance(userId),
         queryFn: () => getCategoryPerformance(userId),
         enabled: !!userId,
         staleTime: 1000 * 60 * 5, // 5 minutes
     });
+
+export function useCategoryPerformance(userId: string) {
+    return useQuery(categoryPerformanceOptions(userId));
 }
 
 // Hook for fetching time metrics
-export function useTimeMetrics(userId: string) {
-    return useQuery({
-        queryKey: ['timeMetrics', userId],
+export const timeMetricsOptions = (userId: string) =>
+    queryOptions({
+        queryKey: queryKeys.dashboard.timeMetrics(userId),
         queryFn: () => getTimeMetrics(userId),
         enabled: !!userId,
         staleTime: 1000 * 60 * 5, // 5 minutes
     });
+
+export function useTimeMetrics(userId: string) {
+    return useQuery(timeMetricsOptions(userId));
 }
 
 // Hook for fetching detailed answers
-export function useDetailedQuizAnswers(userId: string) {
-    return useQuery({
-        queryKey: ['detailedQuizAnswers', userId],
+export const detailedQuizAnswersOptions = (userId: string) =>
+    queryOptions({
+        queryKey: queryKeys.dashboard.detailedQuizAnswers(userId),
         queryFn: () => getDetailedQuizAnswers(userId),
         enabled: !!userId,
         staleTime: 1000 * 60 * 5, // 5 minutes
     });
+
+export function useDetailedQuizAnswers(userId: string) {
+    return useQuery(detailedQuizAnswersOptions(userId));
 }
 
 // Hook for fetching all dashboard data efficiently

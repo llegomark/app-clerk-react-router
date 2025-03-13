@@ -8,10 +8,11 @@ import type { Category } from '~/types';
 interface CategoryCardProps {
     category: Omit<Category, 'questions'>;
     onSelect: (id: number) => void;
+    onHover?: (id: number) => void; // Add hover handler for prefetching
     isLoading?: boolean;
 }
 
-export function CategoryCard({ category, onSelect, isLoading = false }: CategoryCardProps) {
+export function CategoryCard({ category, onSelect, onHover, isLoading = false }: CategoryCardProps) {
     const { isSignedIn } = useUser();
 
     const handleSelect = () => {
@@ -26,6 +27,12 @@ export function CategoryCard({ category, onSelect, isLoading = false }: Category
         onSelect(category.id);
     };
 
+    const handleHover = () => {
+        if (onHover && !isLoading && isSignedIn) {
+            onHover(category.id);
+        }
+    };
+
     return (
         <Card
             className={cn(
@@ -34,6 +41,7 @@ export function CategoryCard({ category, onSelect, isLoading = false }: Category
                 isLoading && "pointer-events-none opacity-80"
             )}
             onClick={handleSelect}
+            onMouseEnter={handleHover} // Add hover event
         >
             {isLoading && (
                 <div className="absolute inset-0 flex items-center justify-center bg-background/50 backdrop-blur-sm z-10">

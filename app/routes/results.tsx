@@ -1,5 +1,5 @@
 // app/routes/results.tsx
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { ArrowLeft, Medal, AlertCircle, BarChart } from 'lucide-react';
 import { Button } from '~/components/ui/button';
