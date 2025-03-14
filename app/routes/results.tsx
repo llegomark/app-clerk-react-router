@@ -86,7 +86,7 @@ function ResultsContent() {
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="flex justify-center">
-                        <Button onClick={handleBackToCategories}>
+                        <Button onClick={handleBackToCategories} className="cursor-pointer">
                             <ArrowLeft className="mr-2 size-4" /> Return to Categories
                         </Button>
                     </CardContent>
@@ -134,11 +134,11 @@ function ResultsContent() {
                     </div>
 
                     <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
-                        <Button variant="default" onClick={handleBackToCategories}>
+                        <Button variant="default" onClick={handleBackToCategories} className="cursor-pointer">
                             <ArrowLeft className="mr-2 size-4" /> Practice More
                         </Button>
 
-                        <Button variant="outline" onClick={handleViewDashboard}>
+                        <Button variant="outline" onClick={handleViewDashboard} className="cursor-pointer">
                             <BarChart className="mr-2 size-4" /> View Dashboard
                         </Button>
                     </div>

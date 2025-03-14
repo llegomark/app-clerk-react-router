@@ -108,6 +108,74 @@ export async function getCategoryWithQuestions(categoryId: number): Promise<Cate
   }
 }
 
+// Get a category with just question IDs, not the full questions
+export async function getCategoryWithQuestionIds(categoryId: number): Promise<Omit<Category, 'questions'> & { questionIds: number[] }> {
+  try {
+    logDebug(`Fetching category ${categoryId} with question IDs only`);
+
+    // Get the category
+    const { data: categoryData, error: categoryError } = await supabase
+      .from('categories')
+      .select('id, name, description, icon')
+      .eq('id', categoryId)
+      .single();
+
+    if (categoryError) throw categoryError;
+
+    // Get just the question IDs for this category
+    const { data: questionData, error: questionsError } = await supabase
+      .from('questions')
+      .select('id')
+      .eq('category_id', categoryId);
+
+    if (questionsError) throw questionsError;
+
+    const questionIds = questionData.map(q => q.id);
+
+    const result = {
+      ...categoryData,
+      questionIds
+    };
+
+    logDebug(`Successfully fetched category ${categoryId} with ${questionIds.length} question IDs`);
+    return result;
+  } catch (error) {
+    logError(`Error fetching category ${categoryId} with question IDs`, error);
+    throw error;
+  }
+}
+
+// Get a single question by ID
+export async function getQuestionById(questionId: number): Promise<Question> {
+  try {
+    logDebug(`Fetching single question ${questionId}`);
+
+    const { data, error } = await supabase
+      .from('questions')
+      .select('*')
+      .eq('id', questionId)
+      .single();
+
+    if (error) throw error;
+
+    // Transform the data to match our type structure
+    const question = {
+      id: data.id,
+      question: data.question,
+      options: data.options,
+      correctAnswer: data.correct_answer,
+      explanation: data.explanation,
+      reference: data.reference
+    } as Question;
+
+    logDebug(`Fetched question ${questionId} successfully`);
+    return question;
+  } catch (error) {
+    logError(`Error fetching question ${questionId}`, error);
+    throw error;
+  }
+}
+
 // Save quiz result - Improved version with better error handling and bookmarked questions support
 export async function saveQuizResult(userId: string, result: QuizResult) {
   try {

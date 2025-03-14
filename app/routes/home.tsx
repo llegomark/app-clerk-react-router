@@ -1,4 +1,4 @@
-// app/routes/home.tsx - modify to add prefetching
+// app/routes/home.tsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { useUser } from '@clerk/react-router';
@@ -11,7 +11,7 @@ import { useCategories, categoryWithQuestionsOptions } from '~/hooks/use-categor
 import { useQuizStore } from '~/lib/store';
 import { Button } from '~/components/ui/button';
 import { Card, CardContent } from '~/components/ui/card';
-import { getCategoryWithQuestions, logDebug } from '~/lib/supabase';
+import { getCategoryWithQuestionIds, logDebug } from '~/lib/supabase';
 import { useQueryClient } from '@tanstack/react-query';
 
 export function meta({ }: Route.MetaArgs) {
@@ -45,7 +45,7 @@ export default function Home() {
     resetQuiz();
   }, [resetQuiz]);
 
-  // Directly handle category selection without using the useCategoryWithQuestions hook
+  // Directly handle category selection with the new approach using question IDs
   const handleSelectCategory = async (categoryId: number) => {
     if (loadingCategoryId !== null) return; // Prevent multiple selections
 
@@ -56,23 +56,23 @@ export default function Home() {
       // Reset quiz state
       resetQuiz();
 
-      // Directly fetch category data from supabase
-      logDebug(`Direct fetching for category ${categoryId}`);
-      const categoryData = await getCategoryWithQuestions(categoryId);
+      // NEW: Instead of fetching all questions, just get the category with question IDs
+      logDebug(`Fetching category ${categoryId} with question IDs`);
+      const categoryData = await getCategoryWithQuestionIds(categoryId);
 
-      console.log('Category data loaded directly:', categoryData);
+      console.log('Category data loaded with question IDs:', categoryData);
 
       if (!categoryData) {
         toast.error('Failed to load category details');
         return;
       }
 
-      if (!categoryData.questions || categoryData.questions.length === 0) {
+      if (!categoryData.questionIds || categoryData.questionIds.length === 0) {
         toast.error('This category has no questions yet');
         return;
       }
 
-      // Start the quiz
+      // Start the quiz with just the category metadata and question IDs
       startQuiz(categoryData);
 
       // Navigate to reviewer page

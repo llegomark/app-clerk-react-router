@@ -2,22 +2,29 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import type { Category, Question, UserAnswer, ShuffledQuestion } from '~/types';
-import { logDebug } from './supabase';
+import { logDebug, getQuestionById } from './supabase';
 import { shuffleArray } from './utils';
 
+// New interface for the store to handle question IDs
 interface QuizState {
   // Categories
   categories: Category[];
   setCategories: (categories: Category[]) => void;
 
-  // Current quiz
-  currentCategory: Category | null;
+  // Current quiz - modified to use question IDs
+  currentCategory: Omit<Category, 'questions'> & {
+    questions: (Question | ShuffledQuestion)[];
+    questionIds?: number[];
+  } | null;
   currentQuestionIndex: number;
   userAnswers: UserAnswer[];
   isQuizComplete: boolean;
+  isLoadingQuestion: boolean;
+  currentQuestionError: string | null;
 
   // Actions
-  startQuiz: (category: Category) => void;
+  startQuiz: (category: Omit<Category, 'questions'> & { questionIds: number[] }) => void;
+  fetchNextQuestion: () => Promise<void>;
   answerQuestion: (questionId: number, selectedOption: number | null, timeRemaining: number) => void;
   nextQuestion: () => void;
   completeQuiz: () => void;
@@ -48,23 +55,60 @@ export const useQuizStore = create<QuizState>()(
       currentQuestionIndex: 0,
       userAnswers: [],
       isQuizComplete: false,
+      isLoadingQuestion: false,
+      currentQuestionError: null,
 
       isTimerRunning: false,
 
-      // Start a new quiz with the selected category and shuffle questions/options
+      // Start a new quiz with the selected category - now using question IDs
       startQuiz: (category) => {
         logDebug('Starting review with category', {
           id: category.id,
           name: category.name,
-          questionsCount: category.questions?.length
+          questionIdsCount: category.questionIds.length
         });
 
-        // Step 1: Create shuffled questions with shuffled options
-        const questionsWithShuffledOptions = category.questions.map(question => {
-          // Make a copy of the original options
-          const originalOptions = [...question.options];
+        // Initialize with empty questions array - we'll fetch them one by one
+        const quizCategory = {
+          ...category,
+          questions: [], // Start with empty questions array
+          questionIds: shuffleArray([...category.questionIds]) // Shuffle question IDs
+        };
 
-          // Shuffle the options
+        // Reset state and set the category with question IDs
+        set({
+          currentCategory: quizCategory,
+          currentQuestionIndex: 0,
+          userAnswers: [],
+          isQuizComplete: false,
+          isLoadingQuestion: true,
+          currentQuestionError: null,
+          isTimerRunning: false,
+        });
+
+        // Fetch the first question
+        get().fetchNextQuestion();
+      },
+
+      // Fetch the next question - new function
+      fetchNextQuestion: async () => {
+        const { currentCategory, currentQuestionIndex } = get();
+        if (!currentCategory || !currentCategory.questionIds) return;
+
+        try {
+          set({ isLoadingQuestion: true, currentQuestionError: null });
+
+          // Get the ID of the current question
+          const questionId = currentCategory.questionIds[currentQuestionIndex];
+          if (!questionId) {
+            throw new Error('Question ID not found');
+          }
+
+          // Fetch the question by ID
+          const question = await getQuestionById(questionId);
+
+          // Create a question with shuffled options
+          const originalOptions = [...question.options];
           const shuffledOptions = shuffleArray(originalOptions);
 
           // Create a mapping between new positions and original positions
@@ -76,31 +120,32 @@ export const useQuizStore = create<QuizState>()(
             optionIndexMap.set(newIndex, originalIndex);
           });
 
-          // Return question with shuffled options and index mapping
-          return {
+          // Create the shuffled question
+          const shuffledQuestion: ShuffledQuestion = {
             ...question,
             options: shuffledOptions,
             optionIndexMap
-          } as ShuffledQuestion;
-        });
+          };
 
-        // Step 2: Shuffle the questions themselves
-        const shuffledQuestions = shuffleArray(questionsWithShuffledOptions);
+          // Update the current category with the new question
+          const updatedQuestions = [...currentCategory.questions];
+          updatedQuestions[currentQuestionIndex] = shuffledQuestion;
 
-        // Step 3: Create a new category with shuffled questions
-        const shuffledCategory = {
-          ...category,
-          questions: shuffledQuestions
-        };
-
-        // Reset state first, then set new state
-        set({
-          currentCategory: shuffledCategory,
-          currentQuestionIndex: 0,
-          userAnswers: [],
-          isQuizComplete: false,
-          isTimerRunning: true,
-        });
+          set({
+            currentCategory: {
+              ...currentCategory,
+              questions: updatedQuestions
+            },
+            isLoadingQuestion: false,
+            isTimerRunning: true
+          });
+        } catch (error: any) {
+          console.error('Error fetching question:', error);
+          set({
+            isLoadingQuestion: false,
+            currentQuestionError: error.message || 'Failed to load question'
+          });
+        }
       },
 
       // Record the user's answer for the current question with time tracking
@@ -108,7 +153,7 @@ export const useQuizStore = create<QuizState>()(
         const { currentCategory, userAnswers } = get();
         if (!currentCategory) return;
 
-        const currentQuestion = currentCategory.questions.find(q => q.id === questionId) as ShuffledQuestion;
+        const currentQuestion = get().getCurrentQuestion() as ShuffledQuestion;
         if (!currentQuestion) return;
 
         // Use the mapping to determine if the answer is correct
@@ -125,11 +170,10 @@ export const useQuizStore = create<QuizState>()(
         logDebug('Answering question', {
           questionId,
           selectedOption,
-          timeRemaining,  // Now we log the actual time remaining
-          // Additional debug info
+          timeRemaining,
           originalCorrectAnswer: currentQuestion.correctAnswer,
           isCorrect,
-          timeTaken: 120 - timeRemaining  // Log the time taken to answer
+          timeTaken: 120 - timeRemaining
         });
 
         set({
@@ -139,7 +183,7 @@ export const useQuizStore = create<QuizState>()(
               questionId,
               selectedOption,
               isCorrect,
-              timeRemaining,  // Store the actual time remaining
+              timeRemaining,
               answeredAt: new Date(),
             },
           ],
@@ -147,13 +191,13 @@ export const useQuizStore = create<QuizState>()(
         });
       },
 
-      // Move to the next question
+      // Move to the next question - modified to fetch the next question
       nextQuestion: () => {
         const { currentQuestionIndex, currentCategory } = get();
-        if (!currentCategory) return;
+        if (!currentCategory || !currentCategory.questionIds) return;
 
         const nextIndex = currentQuestionIndex + 1;
-        const isLastQuestion = nextIndex >= currentCategory.questions.length;
+        const isLastQuestion = nextIndex >= currentCategory.questionIds.length;
 
         logDebug('Moving to next question', {
           currentIndex: currentQuestionIndex,
@@ -161,11 +205,19 @@ export const useQuizStore = create<QuizState>()(
           isLastQuestion
         });
 
-        set({
-          currentQuestionIndex: isLastQuestion ? currentQuestionIndex : nextIndex,
-          isQuizComplete: isLastQuestion,
-          isTimerRunning: !isLastQuestion,
-        });
+        if (isLastQuestion) {
+          set({
+            isQuizComplete: true,
+            isTimerRunning: false,
+          });
+        } else {
+          set({
+            currentQuestionIndex: nextIndex,
+            isTimerRunning: false,
+          });
+          // Fetch the next question
+          get().fetchNextQuestion();
+        }
       },
 
       // Complete the quiz
@@ -186,6 +238,8 @@ export const useQuizStore = create<QuizState>()(
           userAnswers: [],
           isQuizComplete: false,
           isTimerRunning: false,
+          isLoadingQuestion: false,
+          currentQuestionError: null,
         });
       },
 
@@ -196,7 +250,7 @@ export const useQuizStore = create<QuizState>()(
       // Getter for the current question
       getCurrentQuestion: () => {
         const { currentCategory, currentQuestionIndex } = get();
-        if (!currentCategory) return null;
+        if (!currentCategory || !currentCategory.questions) return null;
         return currentCategory.questions[currentQuestionIndex] || null;
       },
 
@@ -218,10 +272,10 @@ export const useQuizStore = create<QuizState>()(
       // Calculate the percentage score
       getResultPercentage: () => {
         const { userAnswers, currentCategory } = get();
-        if (!currentCategory || !currentCategory.questions.length) return 0;
+        if (!currentCategory || !currentCategory.questionIds || !currentCategory.questionIds.length) return 0;
 
         const score = userAnswers.filter(answer => answer.isCorrect).length;
-        return (score / currentCategory.questions.length) * 100;
+        return (score / currentCategory.questionIds.length) * 100;
       },
     })
   )

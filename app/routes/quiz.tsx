@@ -1,8 +1,9 @@
-// app/routes/quiz.tsx - fixed version
+// app/routes/quiz.tsx
 import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router';
 import { useUser } from '@clerk/react-router';
 import { toast } from 'sonner';
+import { ArrowLeftIcon } from 'lucide-react';
 
 import type { Route } from "./+types/quiz";
 import { useQuizStore } from '~/lib/store';
@@ -11,6 +12,7 @@ import { QuestionCard } from '~/components/question-card';
 import { logDebug, logError } from '~/lib/supabase';
 import { ProtectedRoute } from '~/components/protected-route';
 import { useSaveQuizResult } from '~/hooks/use-quiz-mutations';
+import { Button } from '~/components/ui/button';
 
 export function meta({ }: Route.MetaArgs) {
     return [
@@ -46,7 +48,9 @@ function ReviewerContent() {
         stopTimer,
         isQuizComplete,
         getScore,
-        resetQuiz
+        resetQuiz,
+        isLoadingQuestion,
+        currentQuestionError
     } = useQuizStore();
 
     useEffect(() => {
@@ -66,7 +70,7 @@ function ReviewerContent() {
                     logDebug('Review completed, preparing to save results', {
                         categoryId: currentCategory.id,
                         score: getScore(),
-                        totalQuestions: currentCategory.questions.length
+                        totalQuestions: currentCategory.questionIds ? currentCategory.questionIds.length : 0
                     });
 
                     // Prepare the quiz result data
@@ -74,7 +78,7 @@ function ReviewerContent() {
                         categoryId: currentCategory.id,
                         answers: userAnswers,
                         score: getScore(),
-                        totalQuestions: currentCategory.questions.length,
+                        totalQuestions: currentCategory.questionIds ? currentCategory.questionIds.length : 0,
                         completedAt: new Date()
                     };
 
@@ -113,7 +117,7 @@ function ReviewerContent() {
                             categoryId: currentCategory.id,
                             answers: userAnswers,
                             score: getScore(),
-                            totalQuestions: currentCategory.questions.length,
+                            totalQuestions: currentCategory.questionIds ? currentCategory.questionIds.length : 0,
                             completedAt: new Date()
                         }));
                     }
@@ -143,6 +147,44 @@ function ReviewerContent() {
     const currentQuestion = getCurrentQuestion();
     const userAnswer = getUserAnswerForCurrentQuestion();
 
+    // Exit handler - this needs to properly reset state and navigate
+    const handleBackToCategories = () => {
+        resetQuiz();
+        navigate('/', { replace: true });
+    };
+
+    // Add loading state for questions
+    if (isLoadingQuestion) {
+        return (
+            <div className="min-h-[calc(100vh-10rem)] bg-background py-10 px-4">
+                <QuizHeader title={currentCategory.name} />
+                <div className="max-w-2xl mx-auto text-center py-12">
+                    <div className="h-10 w-10 rounded-full border-2 border-primary border-t-transparent animate-spin mx-auto mb-4"></div>
+                    <p className="text-muted-foreground">Loading question...</p>
+                </div>
+            </div>
+        );
+    }
+
+    // Add error state for questions
+    if (currentQuestionError) {
+        return (
+            <div className="min-h-[calc(100vh-10rem)] bg-background py-10 px-4">
+                <QuizHeader title={currentCategory.name} />
+                <div className="max-w-2xl mx-auto text-center py-12">
+                    <div className="p-6 bg-destructive/10 rounded-lg mb-4">
+                        <p className="text-destructive font-medium mb-2">Error loading question</p>
+                        <p className="text-sm text-muted-foreground">{currentQuestionError}</p>
+                    </div>
+                    <Button onClick={handleBackToCategories} className="cursor-pointer gap-2">
+                        <ArrowLeftIcon className="size-4" />
+                        Back to Categories
+                    </Button>
+                </div>
+            </div>
+        );
+    }
+
     if (!currentQuestion) {
         // Only complete quiz if it's not already complete
         if (!isQuizComplete) {
@@ -156,12 +198,6 @@ function ReviewerContent() {
             </div>
         );
     }
-
-    // Exit handler - this needs to properly reset state and navigate
-    const handleBackToCategories = () => {
-        resetQuiz();
-        navigate('/', { replace: true });
-    };
 
     // Updated to accept timeRemaining parameter
     const handleAnswerQuestion = (selectedOption: number, timeRemaining: number) => {
@@ -178,7 +214,7 @@ function ReviewerContent() {
     const handleNextQuestion = () => {
         if (!currentCategory) return;
 
-        const isLastQuestion = currentQuestionIndex === currentCategory.questions.length - 1;
+        const isLastQuestion = currentQuestionIndex === (currentCategory.questionIds?.length || 0) - 1;
 
         if (isLastQuestion) {
             completeQuiz();
@@ -193,7 +229,7 @@ function ReviewerContent() {
             <QuestionCard
                 question={currentQuestion}
                 questionNumber={currentQuestionIndex + 1}
-                totalQuestions={currentCategory.questions.length}
+                totalQuestions={currentCategory.questionIds?.length || 0}
                 userAnswer={userAnswer}
                 isTimerRunning={isTimerRunning}
                 categoryId={currentCategory.id}
