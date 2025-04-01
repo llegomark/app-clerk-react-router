@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardFooter } from '~/components/ui/card';
 import { Button } from '~/components/ui/button';
-import { ArrowRightIcon, BookOpenIcon, InfoIcon, ClockIcon } from 'lucide-react';
+import { ArrowRightIcon, BookOpenIcon, InfoIcon, ClockIcon, CheckCircle2Icon, XCircleIcon } from 'lucide-react';
 import { cn } from '~/lib/utils';
 import { Timer } from './timer';
 import { Progress } from '~/components/ui/progress';
@@ -119,8 +119,8 @@ export function QuestionCard({
                         </h2>
                     </div>
 
-                    {/* Options - improved styling */}
-                    <div className="space-y-4">
+                    {/* Options - improved styling to match quiz.tsx */}
+                    <div className="space-y-3">
                         {question.options.map((option, index) => {
                             // Check if we're dealing with a shuffled question
                             const isCorrectOption = 'optionIndexMap' in question ?
@@ -132,27 +132,36 @@ export function QuestionCard({
                             const isIncorrectAnswer = hasAnswered && isSelectedOption && !isCorrectOption;
 
                             return (
-                                <Button
+                                <div
                                     key={index}
-                                    variant="outline"
                                     className={cn(
-                                        "w-full justify-start text-left px-5 py-4 h-auto text-sm font-normal break-words whitespace-normal text-foreground",
-                                        "border-2 shadow-xs transition-all",
-                                        // Interactive states (when not answered)
-                                        !hasAnswered && "cursor-pointer hover:border-primary/50 hover:bg-accent/50",
-                                        // Correct answer styling - only change border color, not text
-                                        isCorrectAnswer && "border-success",
-                                        // Incorrect selection styling - only change border color, not text
-                                        isIncorrectAnswer && "border-destructive"
+                                        "flex items-center rounded-md overflow-hidden",
+                                        hasAnswered && isCorrectOption ? "border-2 border-green-500 bg-green-50" :
+                                            hasAnswered && isSelectedOption ? "border-2 border-red-500 bg-red-50" :
+                                                hasAnswered ? "border border-gray-200 opacity-70" :
+                                                    "border border-gray-200 hover:border-blue-300 cursor-pointer"
                                     )}
                                     onClick={() => handleOptionClick(index)}
-                                    disabled={hasAnswered || !isTimerRunning}
-                                    style={{ color: 'var(--color-foreground)' }} // Force text color to remain unchanged
                                 >
-                                    <div className="flex items-start gap-2">
-                                        <span>{option}</span>
+                                    <div
+                                        className={cn(
+                                            "flex items-start w-full p-3 text-sm",
+                                            !hasAnswered && "cursor-pointer"
+                                        )}
+                                    >
+                                        <div className="flex-1">
+                                            {option}
+                                        </div>
+
+                                        {hasAnswered && isCorrectOption && (
+                                            <CheckCircle2Icon className="h-4 w-4 text-green-500 ml-2 flex-shrink-0" />
+                                        )}
+
+                                        {hasAnswered && isSelectedOption && !isCorrectOption && (
+                                            <XCircleIcon className="h-4 w-4 text-red-500 ml-2 flex-shrink-0" />
+                                        )}
                                     </div>
-                                </Button>
+                                </div>
                             );
                         })}
                     </div>
